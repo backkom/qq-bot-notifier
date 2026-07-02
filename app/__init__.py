@@ -1,0 +1,2 @@
+"""QQ bot notifier service."""
+

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.sevenpirates.bot-notifier</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/bigkraken/Documents/qq-bot-notifier/env/bin/python</string>
+    <string>-m</string>
+    <string>uvicorn</string>
+    <string>app.main:app</string>
+    <string>--host</string>
+    <string>0.0.0.0</string>
+    <string>--port</string>
+    <string>7848</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/bigkraken/Documents/qq-bot-notifier</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PYTHONPATH</key>
+    <string>/Users/bigkraken/Documents/qq-bot-notifier</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/bigkraken/Documents/qq-bot-notifier/logs/launchd.out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/bigkraken/Documents/qq-bot-notifier/logs/launchd.err.log</string>
+</dict>
+</plist>
