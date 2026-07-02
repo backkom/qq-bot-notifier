@@ -439,7 +439,8 @@ uvicorn app.main:app --host 0.0.0.0 --port 7848 --reload
 - 已新增 VS Code 启动配置 `.vscode/launch.json`，只有一个启动项 `QQ Bot Notifier: uvicorn`，通过平台覆盖字段同时支持 Windows 和 macOS。它使用项目内 `env` 虚拟环境启动 `uvicorn app.main:app --host 0.0.0.0 --port 7848 --reload`；Windows 使用 `env/Scripts/python.exe`，macOS 使用 `env/bin/python`。
 - 已新增 macOS launchctl 配置：`deploy/macos/com.sevenpirates.bot-notifier.plist` 使用用户确认的 macOS 项目路径 `/Users/bigkraken/Documents/qq-bot-notifier`。同时保留模板和安装脚本：`deploy/macos/com.sevenpirates.bot-notifier.plist.template`、`deploy/macos/install-launchctl.sh`、`deploy/macos/uninstall-launchctl.sh`。在 macOS 上需要先创建 `env/bin/python`，再把 plist 放到 `~/Library/LaunchAgents/com.sevenpirates.bot-notifier.plist` 或执行安装脚本生成并加载。
 - 已按方案实现第一版服务：核心代码位于 `app/`，默认配置位于 `config/config.json`，Jenkins 文档位于 `docs/jenkins.md`，测试位于 `tests/`。当前默认行为：未知 `@xxx` 保留原文并继续发送；通知组成员配置用户名；网页管理暂不加认证；`QQ_BOT_TOKEN` 环境变量优先覆盖配置文件 token。
-- 已用项目内 `env` 安装运行和测试依赖，并通过 `env\Scripts\python.exe -m pytest -q`，当前结果为 `6 passed`。本地 Windows 验证过 `http://127.0.0.1:7848/healthz` 和网页首页可访问。
+- 实际发给 QQ bot 的 payload 会在发送前追加写入 JSONL 日志，默认路径 `logs/qqbot-payloads.jsonl`，可用 `QQ_DELIVERY_LOG` 环境变量覆盖。日志包含时间、下游 URL 和 payload，不记录 Authorization token。
+- 已用项目内 `env` 安装运行和测试依赖，并通过 `env\Scripts\python.exe -m pytest -q`，当前结果为 `7 passed`。本地 Windows 验证过 `http://127.0.0.1:7848/healthz` 和网页首页可访问。
 - 不要把真实生产 token 写死进仓库；如果需要示例，使用 `.env.example` 或文档占位符。
 - 如果编辑 README，注意当前 README 内容可能是编码乱码，建议直接替换为 UTF-8 中文。
 - 如果实现网页，保持简单实用，优先可维护性和配置正确性。

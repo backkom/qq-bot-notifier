@@ -1,8 +1,11 @@
+import json
+
 import pytest
 import respx
 from httpx import Response
 
 from app.models import QQBotConfig
+from app import qq_sender
 from app.qq_sender import send_group_message
 
 
@@ -26,3 +29,26 @@ async def test_send_group_message_posts_expected_payload() -> None:
         b'"message":[{"type":"at","data":{"qq":"172310132"}}]}'
     )
 
+
+@pytest.mark.anyio
+@respx.mock
+async def test_send_group_message_writes_payload_log(tmp_path, monkeypatch) -> None:
+    log_path = tmp_path / "qqbot-payloads.jsonl"
+    monkeypatch.setattr(qq_sender, "DELIVERY_LOG_PATH", log_path)
+    respx.post("http://bot/send_group_msg").mock(return_value=Response(200, json={"ok": True}))
+
+    await send_group_message(
+        QQBotConfig(url="http://bot/send_group_msg", token="secret"),
+        524653233,
+        [{"type": "text", "data": {"text": "hello"}}],
+    )
+
+    lines = log_path.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 1
+    entry = json.loads(lines[0])
+    assert entry["url"] == "http://bot/send_group_msg"
+    assert entry["payload"] == {
+        "group_id": 524653233,
+        "message": [{"type": "text", "data": {"text": "hello"}}],
+    }
+    assert "secret" not in lines[0]

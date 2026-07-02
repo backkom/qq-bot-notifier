@@ -28,6 +28,12 @@ uvicorn app.main:app --host 0.0.0.0 --port 7848 --reload
 export QQ_BOT_TOKEN="your-token"
 ```
 
+实际发送给 QQ bot 的 payload 会追加写入本地 JSONL 日志，默认路径为 `logs/qqbot-payloads.jsonl`。可以通过环境变量覆盖：
+
+```bash
+export QQ_DELIVERY_LOG="logs/qqbot-payloads.jsonl"
+```
+
 ## 接口
 
 - `POST /notify`：接收 Jenkins 通知并转发。
