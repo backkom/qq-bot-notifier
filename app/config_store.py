@@ -6,8 +6,11 @@ from pathlib import Path
 from threading import RLock
 from typing import Any
 
+from .env_loader import load_project_env
 from .models import AppConfig, ConfigValidationResult, MentionGroupConfig, ProjectConfig, UserConfig
 
+
+load_project_env()
 
 CONFIG_PATH = Path(os.getenv("QQ_NOTIFIER_CONFIG", "config/config.json"))
 _LOCK = RLock()
@@ -71,6 +74,15 @@ def add_or_update_user(username: str, qq: str, display_name: str = "") -> AppCon
     return config
 
 
+def delete_user(username: str) -> AppConfig:
+    config = load_config()
+    config.users.pop(username, None)
+    for group in config.mention_groups.values():
+        group.members = [member for member in group.members if member != username]
+    save_config(config)
+    return config
+
+
 def add_or_update_project(project: str, group_id: int) -> AppConfig:
     config = load_config()
     config.projects[project] = ProjectConfig(group_id=group_id)
@@ -90,4 +102,3 @@ def config_as_public_dict(config: AppConfig) -> dict[str, Any]:
     if data.get("qq_bot", {}).get("token"):
         data["qq_bot"]["token"] = "***"
     return data
-

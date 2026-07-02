@@ -12,13 +12,14 @@ from .config_store import (
     add_or_update_project,
     add_or_update_user,
     config_as_public_dict,
+    delete_user,
     get_config_path,
     load_config,
     validate_config,
 )
 from .message_parser import build_group_message
 from .models import NotifyRequest, NotifyResponse
-from .qq_sender import QQBotSendError, send_group_message
+from .qq_sender import QQBotSendError, read_recent_delivery_logs, send_group_message
 
 
 logging.basicConfig(level=logging.INFO)
@@ -79,6 +80,7 @@ def index(request: Request) -> HTMLResponse:
         {
             "config": config,
             "config_path": get_config_path(),
+            "delivery_logs": read_recent_delivery_logs(hours=24),
             "validation": validation,
         },
     )
@@ -104,6 +106,12 @@ def post_user(
     return RedirectResponse("/", status_code=303)
 
 
+@app.post("/users/delete")
+def post_delete_user(username: Annotated[str, Form()]) -> RedirectResponse:
+    delete_user(username.strip())
+    return RedirectResponse("/", status_code=303)
+
+
 @app.post("/projects")
 def post_project(
     project: Annotated[str, Form()],
@@ -121,4 +129,3 @@ def post_mention_group(
     member_names = [member.strip() for member in members.split(",") if member.strip()]
     add_or_update_mention_group(name.strip(), member_names)
     return RedirectResponse("/", status_code=303)
-
