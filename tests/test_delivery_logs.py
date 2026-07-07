@@ -21,6 +21,9 @@ def test_read_recent_delivery_logs_returns_last_24_hours(tmp_path, monkeypatch) 
                 "timestamp": (now - timedelta(hours=25)).isoformat(),
                 "url": "http://bot/send_group_msg",
                 "payload": {"group_id": 1, "message": [{"type": "text", "data": {"text": "old"}}]},
+                "success": True,
+                "status_code": 200,
+                "result_text": '{"ok":true}',
             },
             {
                 "timestamp": (now - timedelta(hours=1)).isoformat(),
@@ -32,6 +35,9 @@ def test_read_recent_delivery_logs_returns_last_24_hours(tmp_path, monkeypatch) 
                         {"type": "text", "data": {"text": " hello"}},
                     ],
                 },
+                "success": False,
+                "status_code": 500,
+                "result_text": '{"status":"failed"}',
             },
         ],
     )
@@ -42,6 +48,10 @@ def test_read_recent_delivery_logs_returns_last_24_hours(tmp_path, monkeypatch) 
     assert len(records) == 1
     assert records[0]["group_id"] == 2
     assert records[0]["message_preview"] == "@172310132  hello"
+    assert records[0]["message_full"] == "@172310132  hello"
+    assert records[0]["success"] is False
+    assert records[0]["status_code"] == 500
+    assert records[0]["result_text"] == '{"status":"failed"}'
 
 
 def test_read_recent_delivery_logs_skips_invalid_lines(tmp_path, monkeypatch) -> None:
@@ -54,6 +64,9 @@ def test_read_recent_delivery_logs_skips_invalid_lines(tmp_path, monkeypatch) ->
                 "timestamp": now.isoformat(),
                 "url": "http://bot/send_group_msg",
                 "payload": {"group_id": 3, "message": [{"type": "text", "data": {"text": "ok"}}]},
+                "success": True,
+                "status_code": 200,
+                "result_text": '{"ok":true}',
             }
         )
         + "\n",
@@ -65,3 +78,4 @@ def test_read_recent_delivery_logs_skips_invalid_lines(tmp_path, monkeypatch) ->
 
     assert len(records) == 1
     assert records[0]["message_preview"] == "ok"
+    assert records[0]["success"] is True

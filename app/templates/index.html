@@ -142,6 +142,41 @@
 
     .message-preview {
       max-width: 520px;
+      max-height: 3.2em;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      cursor: help;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-success {
+      color: #0f5132;
+      background: #d1fae5;
+    }
+
+    .status-failed {
+      color: #9f1239;
+      background: #ffe4e6;
+    }
+
+    .status-unknown {
+      color: #475467;
+      background: #eaecf0;
+    }
+
+    .result-text {
+      max-width: 320px;
+      color: var(--muted);
       overflow-wrap: anywhere;
     }
 
@@ -267,6 +302,7 @@
               <th>QQ群号</th>
               <th>消息</th>
               <th>接口</th>
+              <th>结果</th>
             </tr>
           </thead>
           <tbody>
@@ -274,8 +310,20 @@
               <tr>
                 <td>{{ item.timestamp }}</td>
                 <td>{{ item.group_id }}</td>
-                <td class="message-preview">{{ item.message_preview }}</td>
+                <td class="message-preview" title="{{ item.message_full }}">{{ item.message_preview }}</td>
                 <td>{{ item.url }}</td>
+                <td>
+                  {% if item.success is sameas true %}
+                    <span class="status-pill status-success">成功{% if item.status_code %} {{ item.status_code }}{% endif %}</span>
+                  {% elif item.success is sameas false %}
+                    <span class="status-pill status-failed">失败{% if item.status_code %} {{ item.status_code }}{% endif %}</span>
+                  {% else %}
+                    <span class="status-pill status-unknown">未知</span>
+                  {% endif %}
+                  {% if item.result_text %}
+                    <div class="result-text">{{ item.result_text }}</div>
+                  {% endif %}
+                </td>
               </tr>
             {% endfor %}
           </tbody>

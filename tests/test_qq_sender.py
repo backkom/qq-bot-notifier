@@ -51,4 +51,7 @@ async def test_send_group_message_writes_payload_log(tmp_path, monkeypatch) -> N
         "group_id": 524653233,
         "message": [{"type": "text", "data": {"text": "hello"}}],
     }
+    assert entry["success"] is True
+    assert entry["status_code"] == 200
+    assert entry["result_text"] == '{"ok":true}'
     assert "secret" not in lines[0]
