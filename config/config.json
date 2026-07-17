@@ -5,8 +5,8 @@
   },
   "qq_bot": {
     "url": "http://192.168.0.199:3000/send_group_msg",
-    "token": "",
-    "timeout_seconds": 10
+    "token": "OVxgQlGiQQNAKSsfi_65JfqFr04auTXKDzW8IsME0m8",
+    "timeout_seconds": 10.0
   },
   "projects": {
     "monster": {
@@ -14,12 +14,72 @@
     }
   },
   "users": {
+    "lideqiang": {
+      "qq": "172310132",
+      "display_name": "lideqiang"
+    },
     "leaf": {
-      "qq": "172310132"
+      "qq": "172310132",
+      "display_name": "leaf"
+    },
+    "wangkairui": {
+      "qq": "2557338915",
+      "display_name": "wangkairui"
+    },
+    "liweijie": {
+      "qq": "625461152",
+      "display_name": "liweijie"
+    },
+    "xuzejun": {
+      "qq": "1847737508",
+      "display_name": "xuzejun"
+    },
+    "puxiaolong": {
+      "qq": "2504451171",
+      "display_name": "puxiaolong"
+    },
+    "zhangenbo": {
+      "qq": "275279034",
+      "display_name": "zhangenbo"
+    },
+    "yangwentian": {
+      "qq": "575586508",
+      "display_name": "yangwentian"
+    },
+    "chenwei": {
+      "qq": "745827562",
+      "display_name": "chenwei"
+    },
+    "tangfan": {
+      "qq": "779001148",
+      "display_name": "tangfan"
+    },
+    "luotianwen": {
+      "qq": "280635302",
+      "display_name": "luotianwen"
+    },
+    "liyong": {
+      "qq": "33084438",
+      "display_name": "liyong"
     }
   },
   "mention_groups": {
     "monster_tester": {
+      "members": [
+        "leaf",
+        "chenwei",
+        "wangkairui",
+        "puxiaolong",
+        "liyong"
+      ]
+    },
+    "monster_dev_server": {
+      "members": [
+        "tangfan",
+        "luotianwen"
+      ]
+    },
+    "monster_dev_client": {
       "members": [
         "leaf"
       ]
