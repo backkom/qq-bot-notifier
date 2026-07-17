@@ -67,9 +67,9 @@ def validate_config(config: AppConfig) -> ConfigValidationResult:
     return ConfigValidationResult(ok=not errors, errors=errors)
 
 
-def add_or_update_user(username: str, qq: str, display_name: str = "") -> AppConfig:
+def add_or_update_user(username: str, qq: str) -> AppConfig:
     config = load_config()
-    config.users[username] = UserConfig(qq=qq, display_name=display_name)
+    config.users[username] = UserConfig(qq=qq)
     save_config(config)
     return config
 

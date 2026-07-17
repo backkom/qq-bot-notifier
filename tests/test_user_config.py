@@ -12,8 +12,8 @@ def write_config(path) -> None:
             {
                 "qq_bot": {"url": "http://bot/send_group_msg"},
                 "users": {
-                    "leaf": {"qq": "172310132", "display_name": "leaf"},
-                    "alice": {"qq": "10001", "display_name": "Alice"},
+                    "leaf": {"qq": "172310132"},
+                    "alice": {"qq": "10001"},
                 },
                 "mention_groups": {
                     "qa": {"members": ["leaf", "alice"]},
@@ -49,3 +49,19 @@ def test_delete_user_from_web_form_redirects(tmp_path, monkeypatch) -> None:
     assert response.status_code == 303
     saved = json.loads(config_path.read_text(encoding="utf-8"))
     assert "leaf" not in saved["users"]
+
+
+def test_add_user_from_web_form_only_saves_username_and_qq(tmp_path, monkeypatch) -> None:
+    config_path = tmp_path / "config.json"
+    write_config(config_path)
+    monkeypatch.setattr(config_store, "CONFIG_PATH", config_path)
+
+    response = TestClient(app).post(
+        "/users",
+        data={"username": "bob", "qq": "10002"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    saved = json.loads(config_path.read_text(encoding="utf-8"))
+    assert saved["users"]["bob"] == {"qq": "10002"}

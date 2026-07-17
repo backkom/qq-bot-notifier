@@ -22,7 +22,6 @@ class ProjectConfig(BaseModel):
 
 class UserConfig(BaseModel):
     qq: str
-    display_name: str = ""
 
 
 class MentionGroupConfig(BaseModel):
@@ -59,4 +58,3 @@ class NotifyResponse(BaseModel):
 class ConfigValidationResult(BaseModel):
     ok: bool
     errors: list[str] = Field(default_factory=list)
-

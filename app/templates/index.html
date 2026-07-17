@@ -214,7 +214,6 @@
           <tr>
             <th>用户名</th>
             <th>QQ</th>
-            <th>显示名</th>
             <th>操作</th>
           </tr>
         </thead>
@@ -223,7 +222,6 @@
             <tr>
               <td>{{ username }}</td>
               <td>{{ user.qq }}</td>
-              <td>{{ user.display_name }}</td>
               <td class="action-cell">
                 <form class="inline-form" action="/users/delete" method="post">
                   <input type="hidden" name="username" value="{{ username }}">
@@ -237,7 +235,6 @@
       <form class="config-form" action="/users" method="post">
         <label>用户名<input name="username" required placeholder="leaf"></label>
         <label>QQ<input name="qq" required inputmode="numeric" placeholder="172310132"></label>
-        <label>显示名<input name="display_name" placeholder="leaf"></label>
         <button type="submit">保存用户</button>
       </form>
     </section>

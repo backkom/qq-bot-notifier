@@ -100,9 +100,8 @@ def get_config_validation() -> dict:
 def post_user(
     username: Annotated[str, Form()],
     qq: Annotated[str, Form()],
-    display_name: Annotated[str, Form()] = "",
 ) -> RedirectResponse:
-    add_or_update_user(username.strip(), qq.strip(), display_name.strip())
+    add_or_update_user(username.strip(), qq.strip())
     return RedirectResponse("/", status_code=303)
 
 

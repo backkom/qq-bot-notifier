@@ -110,8 +110,7 @@ curl -X POST "http://192.168.0.199:3000/send_group_msg" \
   },
   "users": {
     "leaf": {
-      "qq": "172310132",
-      "display_name": "leaf"
+      "qq": "172310132"
     }
   },
   "mention_groups": {
@@ -308,8 +307,7 @@ curl -X POST "http://192.168.0.193:7848/notify" \
 ```json
 {
   "username": "leaf",
-  "qq": "172310132",
-  "display_name": "leaf"
+  "qq": "172310132"
 }
 ```
 
