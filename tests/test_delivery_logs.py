@@ -79,3 +79,27 @@ def test_read_recent_delivery_logs_skips_invalid_lines(tmp_path, monkeypatch) ->
     assert len(records) == 1
     assert records[0]["message_preview"] == "ok"
     assert records[0]["success"] is True
+
+
+def test_read_recent_delivery_logs_supports_napcat_private_text(tmp_path, monkeypatch) -> None:
+    log_path = tmp_path / "qqbot-payloads.jsonl"
+    write_log(
+        log_path,
+        [
+            {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "url": "http://bot/send_private_msg",
+                "payload": {"user_id": "172310132", "message": "hello"},
+                "success": True,
+                "status_code": 200,
+                "result_text": '{"status":"ok","retcode":0}',
+            }
+        ],
+    )
+    monkeypatch.setattr(qq_sender, "DELIVERY_LOG_PATH", log_path)
+
+    records = qq_sender.read_recent_delivery_logs(hours=24)
+
+    assert len(records) == 1
+    assert records[0]["message_preview"] == "hello"
+    assert records[0]["message_full"] == "hello"

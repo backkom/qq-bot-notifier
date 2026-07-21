@@ -55,6 +55,17 @@ class NotifyResponse(BaseModel):
     qq_bot_status: int | None = None
 
 
+class PrivateMessageRequest(BaseModel):
+    qq: str = Field(pattern=r"^[1-9]\d*$")
+    text: str = Field(min_length=1)
+
+
+class PrivateMessageResponse(BaseModel):
+    ok: bool
+    qq: str
+    qq_bot_status: int | None = None
+
+
 class ConfigValidationResult(BaseModel):
     ok: bool
     errors: list[str] = Field(default_factory=list)

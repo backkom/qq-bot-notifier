@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from threading import RLock
 from typing import Any
+from urllib.parse import urlsplit, urlunsplit
 
 import httpx
 
@@ -63,6 +64,54 @@ async def send_group_message(
         raise QQBotSendError(f"QQ bot returned {response.status_code}: {response.text[:500]}")
 
     return response.status_code
+
+
+async def send_private_message(qq_bot: QQBotConfig, qq: str, text: str) -> int:
+    url = _private_message_url(qq_bot.url)
+    headers = {"Content-Type": "application/json"}
+    if qq_bot.token:
+        headers["Authorization"] = f"Bearer {qq_bot.token}"
+
+    # NapCat's send_private_msg schema accepts user_id and message as strings.
+    payload = {"user_id": qq, "message": text}
+
+    try:
+        async with httpx.AsyncClient(timeout=qq_bot.timeout_seconds) as client:
+            response = await client.post(url, headers=headers, json=payload)
+    except httpx.HTTPError as exc:
+        write_delivery_log(url, payload, success=False, status_code=None, result_text=str(exc))
+        raise QQBotSendError(f"Failed to call QQ bot: {exc}") from exc
+
+    result_text = response.text[:500]
+    success = response.status_code < 400 and _napcat_response_succeeded(response)
+    write_delivery_log(
+        url,
+        payload,
+        success=success,
+        status_code=response.status_code,
+        result_text=result_text,
+    )
+
+    if not success:
+        raise QQBotSendError(f"QQ bot returned {response.status_code}: {result_text}")
+
+    return response.status_code
+
+
+def _private_message_url(group_message_url: str) -> str:
+    parsed = urlsplit(group_message_url)
+    return urlunsplit(parsed._replace(path="/send_private_msg", query="", fragment=""))
+
+
+def _napcat_response_succeeded(response: httpx.Response) -> bool:
+    try:
+        body = response.json()
+    except ValueError:
+        return True
+
+    if not isinstance(body, dict) or "status" not in body:
+        return True
+    return body.get("status") == "ok" and body.get("retcode", 0) == 0
 
 
 def write_delivery_log(
@@ -135,14 +184,22 @@ def _parse_log_timestamp(value: str) -> datetime:
     return timestamp.astimezone(timezone.utc)
 
 
-def _message_preview(message: list[dict[str, Any]]) -> str:
+def _message_preview(message: Any) -> str:
     preview = _message_full(message)
     return _truncate_text(preview, limit=180)
 
 
-def _message_full(message: list[dict[str, Any]]) -> str:
+def _message_full(message: Any) -> str:
+    if isinstance(message, str):
+        return message
+    if not isinstance(message, list):
+        return str(message)
+
     parts: list[str] = []
     for segment in message:
+        if not isinstance(segment, dict):
+            parts.append(str(segment))
+            continue
         data = segment.get("data", {})
         if segment.get("type") == "at":
             parts.append(f"@{data.get('qq', '')}")

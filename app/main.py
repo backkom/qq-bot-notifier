@@ -19,8 +19,13 @@ from .config_store import (
 )
 from .failure_notifier import notify_qq_bot_failure
 from .message_parser import build_group_message
-from .models import NotifyRequest, NotifyResponse
-from .qq_sender import QQBotSendError, read_recent_delivery_logs, send_group_message
+from .models import NotifyRequest, NotifyResponse, PrivateMessageRequest, PrivateMessageResponse
+from .qq_sender import (
+    QQBotSendError,
+    read_recent_delivery_logs,
+    send_group_message,
+    send_private_message,
+)
 
 
 logging.basicConfig(level=logging.INFO)
@@ -71,6 +76,20 @@ async def notify(request: NotifyRequest) -> NotifyResponse:
         unknown_mentions=built.unknown_mentions,
         qq_bot_status=status,
     )
+
+
+@app.post("/private-message", response_model=PrivateMessageResponse)
+async def private_message(request: PrivateMessageRequest) -> PrivateMessageResponse:
+    config = load_config()
+    logger.info("private_message qq=%s", request.qq)
+
+    try:
+        status = await send_private_message(config.qq_bot, request.qq, request.text)
+    except QQBotSendError as exc:
+        await notify_qq_bot_failure(request.text)
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return PrivateMessageResponse(ok=True, qq=request.qq, qq_bot_status=status)
 
 
 @app.get("/", response_class=HTMLResponse)

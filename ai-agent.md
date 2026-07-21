@@ -289,6 +289,62 @@ curl -X POST "http://192.168.0.193:7848/notify" \
 - `404`：找不到 project、用户或组配置。
 - `502`：调用下游 QQ 机器人失败。
 
+### `POST /private-message`
+
+供上游调用方向指定 QQ 号发送私聊文本消息。
+
+请求体：
+
+```json
+{
+  "qq": "172310132",
+  "text": "构建已经完成，请及时查看。"
+}
+```
+
+字段含义：
+
+- `qq`：必填，接收方 QQ 号，使用只包含数字的字符串。
+- `text`：必填，要发送的文本消息，不能为空字符串。
+
+成功响应：
+
+```json
+{
+  "ok": true,
+  "qq": "172310132",
+  "qq_bot_status": 200
+}
+```
+
+调用示例：
+
+```bash
+curl -X POST "http://192.168.0.193:7848/private-message" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "qq": "172310132",
+    "text": "构建已经完成，请及时查看。"
+  }'
+```
+
+根据 NapCat 官方 `send_private_msg` 动作定义，本服务向与 `qq_bot.url` 相同的 NapCat HTTP 服务调用：
+
+```http
+POST /send_private_msg
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+```json
+{
+  "user_id": "172310132",
+  "message": "构建已经完成，请及时查看。"
+}
+```
+
+NapCat 即使业务失败也可能返回 HTTP 200，因此实现必须同时检查响应 JSON：仅 `status` 为 `ok` 且 `retcode` 为 `0` 时视为成功。调用失败时本接口返回 `502` 并沿用现有 QQ Bot 发送失败通知机制；请求字段校验失败时由 FastAPI 返回 `422`。
+
 ### `GET /`
 
 网页管理界面首页。

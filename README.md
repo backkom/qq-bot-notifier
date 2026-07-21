@@ -37,6 +37,7 @@ export QQ_DELIVERY_LOG="logs/qqbot-payloads.jsonl"
 ## 接口
 
 - `POST /notify`：接收 Jenkins 通知并转发。
+- `POST /private-message`：向指定 QQ 号发送私聊文本消息。
 - `GET /`：网页管理用户、通知组、项目群号。
 - `GET /config`：查看当前配置，token 会被隐藏。
 - `GET /config/validate`：校验配置。

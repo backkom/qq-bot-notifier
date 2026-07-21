@@ -8,7 +8,7 @@ from httpx import Response
 
 from app import failure_notifier, main
 from app.failure_notifier import notify_qq_bot_failure
-from app.models import AppConfig, NotifyRequest
+from app.models import AppConfig, NotifyRequest, PrivateMessageRequest
 from app.qq_sender import QQBotSendError
 
 
@@ -52,3 +52,19 @@ async def test_notify_reports_qq_bot_failure_and_returns_502(monkeypatch) -> Non
 
     assert exc_info.value.status_code == 502
     report_failure.assert_awaited_once_with("构建失败\nbuild failed")
+
+
+@pytest.mark.anyio
+async def test_private_message_reports_qq_bot_failure_and_returns_502(monkeypatch) -> None:
+    config = AppConfig.model_validate({"qq_bot": {"url": "http://bot/send_group_msg"}})
+    send = AsyncMock(side_effect=QQBotSendError("QQ bot unavailable"))
+    report_failure = AsyncMock()
+    monkeypatch.setattr(main, "load_config", lambda: config)
+    monkeypatch.setattr(main, "send_private_message", send)
+    monkeypatch.setattr(main, "notify_qq_bot_failure", report_failure)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await main.private_message(PrivateMessageRequest(qq="172310132", text="hello"))
+
+    assert exc_info.value.status_code == 502
+    report_failure.assert_awaited_once_with("hello")
