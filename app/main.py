@@ -17,6 +17,7 @@ from .config_store import (
     load_config,
     validate_config,
 )
+from .failure_notifier import notify_qq_bot_failure
 from .message_parser import build_group_message
 from .models import NotifyRequest, NotifyResponse
 from .qq_sender import QQBotSendError, read_recent_delivery_logs, send_group_message
@@ -57,6 +58,8 @@ async def notify(request: NotifyRequest) -> NotifyResponse:
     try:
         status = await send_group_message(config.qq_bot, built.group_id, built.message)
     except QQBotSendError as exc:
+        notification_content = f"{request.title}\n{request.text}" if request.title else request.text
+        await notify_qq_bot_failure(notification_content)
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     return NotifyResponse(

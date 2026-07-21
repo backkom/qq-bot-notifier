@@ -443,3 +443,9 @@ uvicorn app.main:app --host 0.0.0.0 --port 7848 --reload
 - 如果编辑 README，注意当前 README 内容可能是编码乱码，建议直接替换为 UTF-8 中文。
 - 如果实现网页，保持简单实用，优先可维护性和配置正确性。
 - 如果服务只在可信内网运行，可以先不做认证；如果暴露给更广范围，必须补认证。
+
+## QQ Bot 发送失败通知
+
+当下游 QQ Bot 请求失败并抛出 `QQBotSendError` 时，服务会调用 Jenkins 的 `Message Notify` job，向 `192.168.0.194;` 发送“给QQBot发送消息失败”，并在“通知内容：”后附上原始通知的 `title`（如有）和 `text`。Jenkins 请求使用 Basic Auth 和 `application/x-www-form-urlencoded` 参数 `target`、`text`。
+
+失败通知的地址、用户名、凭据、目标、文案和超时时间按用户要求直接定义在 `app/failure_notifier.py` 中。失败通知自身请求失败时只写错误日志，原 `/notify` 请求仍返回 QQ Bot 失败对应的 502。
