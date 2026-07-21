@@ -1,0 +1,29 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 7848
+  },
+  "qq_bot": {
+    "url": "http://192.168.0.199:3000/send_group_msg",
+    "token": "OVxgQlGiQQNAKSsfi_65JfqFr04auTXKDzW8IsME0m8",
+    "timeout_seconds": 10.0
+  },
+  "projects": {
+    "monster": {
+      "group_id": 524653233
+    }
+  },
+  "users": {
+    "leaf": {
+      "qq": "172310132",
+      "display_name": "leaf"
+    }
+  },
+  "mention_groups": {
+    "monster_tester": {
+      "members": [
+        "leaf"
+      ]
+    }
+  }
+}
