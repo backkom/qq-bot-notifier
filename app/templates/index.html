@@ -227,6 +227,12 @@
       margin-right: 6px;
     }
 
+    .message-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
     @media (max-width: 760px) {
       .config-form {
         grid-template-columns: 1fr;
@@ -255,6 +261,14 @@
             >
             <label class="message-tab" for="received-message-project-key-{{ loop.index0 }}">{{ project_key[0] }} / {{ project_key[1] }} ({{ messages | length }})</label>
             <div class="message-panel">
+              <div class="message-actions">
+                <button class="copy-button" type="button" data-message="{{ messages | map(attribute='message') | join('\n') }}" onclick="copyMessage(this)">复制全部</button>
+                <form class="inline-form" action="/cache-messages/delete-group" method="post">
+                  <input type="hidden" name="project" value="{{ project_key[0] }}">
+                  <input type="hidden" name="key" value="{{ project_key[1] }}">
+                  <button class="danger-button" type="submit">清除全部</button>
+                </form>
+              </div>
               <table>
                 <thead>
                   <tr>

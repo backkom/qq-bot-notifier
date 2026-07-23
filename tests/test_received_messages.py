@@ -28,6 +28,18 @@ def test_delete_allows_the_message_to_be_received_again(tmp_path, monkeypatch) -
     assert second.id != first.id
 
 
+def test_delete_messages_removes_only_the_selected_project_key(tmp_path, monkeypatch) -> None:
+    message_path = tmp_path / "received-messages.json"
+    monkeypatch.setattr(received_message_store, "RECEIVED_MESSAGES_PATH", message_path)
+    received_message_store.receive_message("api", "build-42", "failed")
+    received_message_store.receive_message("api", "build-42", "restarted")
+    received_message_store.receive_message("api", "build-43", "succeeded")
+
+    assert received_message_store.delete_messages("api", "build-42") == 2
+    grouped = received_message_store.list_messages_by_project_key()
+    assert list(grouped) == [("api", "build-43")]
+
+
 def test_received_message_api_and_delete_form(tmp_path, monkeypatch) -> None:
     message_path = tmp_path / "received-messages.json"
     monkeypatch.setattr(received_message_store, "RECEIVED_MESSAGES_PATH", message_path)
@@ -46,4 +58,23 @@ def test_received_message_api_and_delete_form(tmp_path, monkeypatch) -> None:
         follow_redirects=False,
     )
     assert delete_response.status_code == 303
+    assert received_message_store.list_messages_by_project_key() == {}
+
+
+def test_delete_message_group_form(tmp_path, monkeypatch) -> None:
+    message_path = tmp_path / "received-messages.json"
+    monkeypatch.setattr(received_message_store, "RECEIVED_MESSAGES_PATH", message_path)
+    client = TestClient(app)
+    client.post(
+        "/cache-messages",
+        json={"project": "api", "key": "build-42", "message": "failed"},
+    )
+
+    response = client.post(
+        "/cache-messages/delete-group",
+        data={"project": "api", "key": "build-42"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
     assert received_message_store.list_messages_by_project_key() == {}

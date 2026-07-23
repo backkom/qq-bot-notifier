@@ -33,7 +33,12 @@ from .qq_sender import (
     send_group_message,
     send_private_message,
 )
-from .received_message_store import delete_message, list_messages_by_project_key, receive_message
+from .received_message_store import (
+    delete_message,
+    delete_messages,
+    list_messages_by_project_key,
+    receive_message,
+)
 
 
 logging.basicConfig(level=logging.INFO)
@@ -171,4 +176,13 @@ def post_mention_group(
 @app.post("/cache-messages/delete")
 def post_delete_received_message(message_id: Annotated[str, Form()]) -> RedirectResponse:
     delete_message(message_id)
+    return RedirectResponse("/", status_code=303)
+
+
+@app.post("/cache-messages/delete-group")
+def post_delete_received_message_group(
+    project: Annotated[str, Form()],
+    key: Annotated[str, Form()],
+) -> RedirectResponse:
+    delete_messages(project, key)
     return RedirectResponse("/", status_code=303)

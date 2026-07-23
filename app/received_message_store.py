@@ -68,6 +68,19 @@ def delete_message(message_id: str) -> bool:
         return True
 
 
+def delete_messages(project: str, key: str) -> int:
+    """Delete every message belonging to a project and key pair."""
+    with _LOCK:
+        messages = _load_messages()
+        remaining = [
+            item for item in messages if item.project != project or item.key != key
+        ]
+        deleted_count = len(messages) - len(remaining)
+        if deleted_count:
+            _save_messages(remaining)
+        return deleted_count
+
+
 def _load_messages() -> list[ReceivedMessage]:
     if not RECEIVED_MESSAGES_PATH.exists():
         return []
