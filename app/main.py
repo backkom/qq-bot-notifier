@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 from fastapi import FastAPI, Form, HTTPException, Request
@@ -46,6 +47,12 @@ logger = logging.getLogger("qq-bot-notifier")
 
 app = FastAPI(title="QQ Bot Notifier")
 templates = Jinja2Templates(directory="app/templates")
+_CST = timezone(timedelta(hours=8), name="CST")
+
+def format_cst(value: datetime) -> str:
+    return value.astimezone(_CST).strftime("%Y-%m-%d %H:%M:%S CST")
+
+templates.env.filters["cst_time"] = format_cst
 
 
 @app.get("/healthz")

@@ -1,7 +1,15 @@
+from datetime import UTC, datetime
+
 from fastapi.testclient import TestClient
 
 from app import received_message_store
-from app.main import app
+from app.main import app, format_cst
+
+
+def test_format_cst_converts_utc_to_china_standard_time() -> None:
+    timestamp = datetime(2026, 7, 23, 4, 5, 6, tzinfo=UTC)
+
+    assert format_cst(timestamp) == "2026-07-23 12:05:06 CST"
 
 
 def test_receive_message_deduplicates_and_refreshes_time(tmp_path, monkeypatch) -> None:

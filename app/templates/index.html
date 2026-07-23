@@ -281,7 +281,7 @@
                 <tbody>
                   {% for item in messages %}
                     <tr>
-                      <td>{{ item.received_at.strftime("%Y-%m-%d %H:%M:%S UTC") }}</td>
+                      <td>{{ item.received_at | cst_time }}</td>
                       <td>{{ item.key }}</td>
                       <td class="message-content">{{ item.message }}</td>
                       <td class="action-cell">
