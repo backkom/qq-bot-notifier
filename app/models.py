@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -64,6 +65,25 @@ class PrivateMessageResponse(BaseModel):
     ok: bool
     qq: str
     qq_bot_status: int | None = None
+
+
+class ReceivedMessageRequest(BaseModel):
+    project: str = Field(min_length=1)
+    key: str = Field(min_length=1)
+    message: str = Field(min_length=1)
+
+
+class ReceivedMessage(BaseModel):
+    id: str
+    project: str
+    key: str
+    message: str
+    received_at: datetime
+
+
+class ReceivedMessageResponse(BaseModel):
+    ok: bool
+    message: ReceivedMessage
 
 
 class ConfigValidationResult(BaseModel):

@@ -180,6 +180,53 @@
       overflow-wrap: anywhere;
     }
 
+    .message-tabs {
+      margin-bottom: 14px;
+    }
+
+    .message-tab-control {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .message-tab {
+      display: inline-block;
+      min-height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 6px 10px;
+      color: var(--muted);
+      cursor: pointer;
+      margin: 0 6px 6px 0;
+    }
+
+    .message-tab-control:checked + .message-tab {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .message-panel {
+      display: none;
+    }
+
+    .message-tab-control:checked + .message-tab + .message-panel {
+      display: block;
+    }
+
+    .message-content {
+      max-width: 600px;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .copy-button {
+      background: #475467;
+      min-width: 64px;
+      padding: 0 12px;
+      margin-right: 6px;
+    }
+
     @media (max-width: 760px) {
       .config-form {
         grid-template-columns: 1fr;
@@ -194,6 +241,54 @@
   </header>
 
   <main>
+    <section>
+      <h2>接收消息</h2>
+      {% if received_messages_by_project_key %}
+        <div class="message-tabs">
+          {% for project_key, messages in received_messages_by_project_key.items() %}
+            <input
+              class="message-tab-control"
+              type="radio"
+              name="received-message-project-key"
+              id="received-message-project-key-{{ loop.index0 }}"
+              {% if loop.first %}checked{% endif %}
+            >
+            <label class="message-tab" for="received-message-project-key-{{ loop.index0 }}">{{ project_key[0] }} / {{ project_key[1] }} ({{ messages | length }})</label>
+            <div class="message-panel">
+              <table>
+                <thead>
+                  <tr>
+                    <th>接收时间</th>
+                    <th>标识</th>
+                    <th>消息</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in messages %}
+                    <tr>
+                      <td>{{ item.received_at.strftime("%Y-%m-%d %H:%M:%S UTC") }}</td>
+                      <td>{{ item.key }}</td>
+                      <td class="message-content">{{ item.message }}</td>
+                      <td class="action-cell">
+                        <button class="copy-button" type="button" data-message="{{ item.message }}" onclick="copyMessage(this)">复制</button>
+                        <form class="inline-form" action="/cache-messages/delete" method="post">
+                          <input type="hidden" name="message_id" value="{{ item.id }}">
+                          <button class="danger-button" type="submit">删除</button>
+                        </form>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="meta">暂无接收消息。</div>
+      {% endif %}
+    </section>
+
     <section>
       <h2>配置状态</h2>
       {% if validation.ok %}
@@ -330,5 +425,30 @@
       {% endif %}
     </section>
   </main>
+  <script>
+    async function copyMessage(button) {
+      const originalText = button.textContent;
+      try {
+        const message = button.dataset.message;
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(message);
+        } else {
+          const input = document.createElement("textarea");
+          input.value = message;
+          input.style.position = "fixed";
+          input.style.opacity = "0";
+          document.body.appendChild(input);
+          input.select();
+          const copied = document.execCommand("copy");
+          input.remove();
+          if (!copied) throw new Error("Copy failed");
+        }
+        button.textContent = "已复制";
+      } catch {
+        button.textContent = "复制失败";
+      }
+      setTimeout(() => { button.textContent = originalText; }, 1500);
+    }
+  </script>
 </body>
 </html>

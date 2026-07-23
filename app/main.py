@@ -19,13 +19,21 @@ from .config_store import (
 )
 from .failure_notifier import notify_qq_bot_failure
 from .message_parser import build_group_message
-from .models import NotifyRequest, NotifyResponse, PrivateMessageRequest, PrivateMessageResponse
+from .models import (
+    NotifyRequest,
+    NotifyResponse,
+    PrivateMessageRequest,
+    PrivateMessageResponse,
+    ReceivedMessageRequest,
+    ReceivedMessageResponse,
+)
 from .qq_sender import (
     QQBotSendError,
     read_recent_delivery_logs,
     send_group_message,
     send_private_message,
 )
+from .received_message_store import delete_message, list_messages_by_project_key, receive_message
 
 
 logging.basicConfig(level=logging.INFO)
@@ -92,6 +100,13 @@ async def private_message(request: PrivateMessageRequest) -> PrivateMessageRespo
     return PrivateMessageResponse(ok=True, qq=request.qq, qq_bot_status=status)
 
 
+@app.post("/cache-messages", response_model=ReceivedMessageResponse)
+def post_received_message(request: ReceivedMessageRequest) -> ReceivedMessageResponse:
+    message = receive_message(request.project, request.key, request.message)
+    logger.info("received_message project=%s key=%s", request.project, request.key)
+    return ReceivedMessageResponse(ok=True, message=message)
+
+
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request) -> HTMLResponse:
     config = load_config()
@@ -103,6 +118,7 @@ def index(request: Request) -> HTMLResponse:
             "config": config,
             "config_path": get_config_path(),
             "delivery_logs": read_recent_delivery_logs(hours=24),
+            "received_messages_by_project_key": list_messages_by_project_key(),
             "validation": validation,
         },
     )
@@ -149,4 +165,10 @@ def post_mention_group(
 ) -> RedirectResponse:
     member_names = [member.strip() for member in members.split(",") if member.strip()]
     add_or_update_mention_group(name.strip(), member_names)
+    return RedirectResponse("/", status_code=303)
+
+
+@app.post("/cache-messages/delete")
+def post_delete_received_message(message_id: Annotated[str, Form()]) -> RedirectResponse:
+    delete_message(message_id)
     return RedirectResponse("/", status_code=303)
