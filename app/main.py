@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
-from fastapi import FastAPI, Form, HTTPException, Request
+from fastapi import FastAPI, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
@@ -23,6 +23,8 @@ from .message_parser import build_group_message
 from .models import (
     NotifyRequest,
     NotifyResponse,
+    CacheMessagesClearResponse,
+    CacheMessagesCopyResponse,
     PrivateMessageRequest,
     PrivateMessageResponse,
     ReceivedMessageRequest,
@@ -117,6 +119,36 @@ def post_received_message(request: ReceivedMessageRequest) -> ReceivedMessageRes
     message = receive_message(request.project, request.key, request.message)
     logger.info("received_message project=%s key=%s", request.project, request.key)
     return ReceivedMessageResponse(ok=True, message=message)
+
+
+@app.get("/cache-messages/copy-all", response_model=CacheMessagesCopyResponse)
+def get_cache_messages_copy_all(
+    project: Annotated[str, Query(min_length=1)],
+    key: Annotated[str, Query(min_length=1)],
+) -> CacheMessagesCopyResponse:
+    messages = list_messages_by_project_key().get((project, key), [])
+    text_messages = [item.message for item in messages]
+    return CacheMessagesCopyResponse(
+        project=project,
+        key=key,
+        messages=text_messages,
+        content="\n".join(text_messages),
+    )
+
+
+@app.delete("/cache-messages/clear-all", response_model=CacheMessagesClearResponse)
+def delete_cache_messages_clear_all(
+    project: Annotated[str, Query(min_length=1)],
+    key: Annotated[str, Query(min_length=1)],
+) -> CacheMessagesClearResponse:
+    deleted_count = delete_messages(project, key)
+    logger.info("clear_cache_messages project=%s key=%s deleted=%s", project, key, deleted_count)
+    return CacheMessagesClearResponse(
+        ok=True,
+        project=project,
+        key=key,
+        deleted_count=deleted_count,
+    )
 
 
 @app.get("/", response_class=HTMLResponse)

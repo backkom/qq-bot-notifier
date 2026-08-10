@@ -86,3 +86,21 @@ def test_delete_message_group_form(tmp_path, monkeypatch) -> None:
 
     assert response.status_code == 303
     assert received_message_store.list_messages_by_project_key() == {}
+
+
+def test_external_copy_all_and_clear_all_apis(tmp_path, monkeypatch) -> None:
+    message_path = tmp_path / "received-messages.json"
+    monkeypatch.setattr(received_message_store, "RECEIVED_MESSAGES_PATH", message_path)
+    client = TestClient(app)
+    payload = {"project": "api", "key": "build-42"}
+    client.post("/cache-messages", json={**payload, "message": "first"})
+    client.post("/cache-messages", json={**payload, "message": "second"})
+
+    copy_response = client.get("/cache-messages/copy-all", params=payload)
+
+    assert copy_response.status_code == 200
+    assert copy_response.json()["content"] == "second\nfirst"
+    clear_response = client.delete("/cache-messages/clear-all", params=payload)
+    assert clear_response.status_code == 200
+    assert clear_response.json()["deleted_count"] == 2
+    assert received_message_store.list_messages_by_project_key() == {}

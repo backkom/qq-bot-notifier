@@ -86,6 +86,20 @@ class ReceivedMessageResponse(BaseModel):
     message: ReceivedMessage
 
 
+class CacheMessagesCopyResponse(BaseModel):
+    project: str
+    key: str
+    messages: list[str]
+    content: str
+
+
+class CacheMessagesClearResponse(BaseModel):
+    ok: bool
+    project: str
+    key: str
+    deleted_count: int
+
+
 class ConfigValidationResult(BaseModel):
     ok: bool
     errors: list[str] = Field(default_factory=list)
