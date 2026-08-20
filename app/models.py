@@ -78,6 +78,7 @@ class ReceivedMessage(BaseModel):
     project: str
     key: str
     message: str
+    first_received_at: datetime
     received_at: datetime
 
 

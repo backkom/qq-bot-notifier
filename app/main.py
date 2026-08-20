@@ -54,7 +54,15 @@ _CST = timezone(timedelta(hours=8), name="CST")
 def format_cst(value: datetime) -> str:
     return value.astimezone(_CST).strftime("%Y-%m-%d %H:%M:%S CST")
 
+
+def days_since(value: datetime) -> int:
+    """Return the number of complete days elapsed since an aware timestamp."""
+    now = datetime.now(timezone.utc)
+    return max(0, (now - value.astimezone(timezone.utc)).days)
+
+
 templates.env.filters["cst_time"] = format_cst
+templates.env.filters["days_since"] = days_since
 
 
 @app.get("/healthz")

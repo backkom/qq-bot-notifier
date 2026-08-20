@@ -1,9 +1,9 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from fastapi.testclient import TestClient
 
 from app import received_message_store
-from app.main import app, format_cst
+from app.main import app, days_since, format_cst
 
 
 def test_format_cst_converts_utc_to_china_standard_time() -> None:
@@ -20,9 +20,32 @@ def test_receive_message_deduplicates_and_refreshes_time(tmp_path, monkeypatch) 
     second = received_message_store.receive_message("api", "build-42", "failed")
 
     assert first.id == second.id
+    assert second.first_received_at == first.first_received_at
     assert second.received_at >= first.received_at
     grouped = received_message_store.list_messages_by_project_key()
     assert [item.message for item in grouped[("api", "build-42")]] == ["failed"]
+
+
+def test_days_since_returns_complete_elapsed_days() -> None:
+    timestamp = datetime.now(UTC) - timedelta(days=3, hours=2)
+
+    assert days_since(timestamp) == 3
+
+
+def test_legacy_messages_use_last_received_time_as_first_received_time(tmp_path, monkeypatch) -> None:
+    message_path = tmp_path / "received-messages.json"
+    monkeypatch.setattr(received_message_store, "RECEIVED_MESSAGES_PATH", message_path)
+    received_at = datetime(2026, 7, 23, 4, 5, 6, tzinfo=UTC)
+    message_path.write_text(
+        '[{"id":"legacy","project":"api","key":"build-42","message":"failed",'
+        f'"received_at":"{received_at.isoformat()}"}}]',
+        encoding="utf-8",
+    )
+
+    messages = received_message_store.list_messages_by_project_key()
+
+    item = messages[("api", "build-42")][0]
+    assert item.first_received_at == received_at
 
 
 def test_delete_allows_the_message_to_be_received_again(tmp_path, monkeypatch) -> None:

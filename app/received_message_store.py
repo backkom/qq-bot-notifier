@@ -18,7 +18,7 @@ _LOCK = RLock()
 
 
 def receive_message(project: str, key: str, message: str) -> ReceivedMessage:
-    """Insert a message or refresh the timestamp of an identical message."""
+    """Insert a message or refresh the last-received timestamp of an identical message."""
     now = datetime.now(UTC)
     with _LOCK:
         messages = _load_messages()
@@ -33,6 +33,7 @@ def receive_message(project: str, key: str, message: str) -> ReceivedMessage:
             project=project,
             key=key,
             message=message,
+            first_received_at=now,
             received_at=now,
         )
         messages.append(item)
@@ -85,7 +86,12 @@ def _load_messages() -> list[ReceivedMessage]:
     if not RECEIVED_MESSAGES_PATH.exists():
         return []
     raw = json.loads(RECEIVED_MESSAGES_PATH.read_text(encoding="utf-8"))
-    return [ReceivedMessage.model_validate(item) for item in raw]
+    messages = []
+    for item in raw:
+        if not item.get("first_received_at"):
+            item = {**item, "first_received_at": item["received_at"]}
+        messages.append(ReceivedMessage.model_validate(item))
+    return messages
 
 
 def _save_messages(messages: list[ReceivedMessage]) -> None:

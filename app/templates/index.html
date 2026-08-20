@@ -229,8 +229,39 @@
 
     .message-actions {
       display: flex;
+      align-items: center;
       gap: 8px;
       margin-bottom: 10px;
+    }
+
+    .message-filter {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+      color: var(--muted);
+    }
+
+    .message-filter label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: inherit;
+      font-size: inherit;
+      font-weight: 400;
+    }
+
+    .message-filter input[type="checkbox"] {
+      min-height: auto;
+      width: 16px;
+      height: 16px;
+      margin: 0;
+    }
+
+    .message-filter input[type="number"] {
+      width: 76px;
+      min-height: 32px;
     }
 
     @media (max-width: 760px) {
@@ -250,6 +281,14 @@
     <section>
       <h2>接收消息</h2>
       {% if received_messages_by_project_key %}
+        <div class="message-filter">
+          <label for="received-message-filter-enabled">
+            <input id="received-message-filter-enabled" type="checkbox">
+            只显示距首次接收超过
+          </label>
+          <input id="received-message-filter-days" type="number" min="0" step="1" value="3" aria-label="首次接收天数阈值">
+          <span>天的消息</span>
+        </div>
         <div class="message-tabs">
           {% for project_key, messages in received_messages_by_project_key.items() %}
             <input
@@ -259,7 +298,7 @@
               id="received-message-project-key-{{ loop.index0 }}"
               {% if loop.first %}checked{% endif %}
             >
-            <label class="message-tab" for="received-message-project-key-{{ loop.index0 }}">{{ project_key[0] }} / {{ project_key[1] }} ({{ messages | length }})</label>
+            <label class="message-tab" for="received-message-project-key-{{ loop.index0 }}">{{ project_key[0] }} / {{ project_key[1] }} (<span class="message-tab-count">{{ messages | length }}</span>)</label>
             <div class="message-panel">
               <div class="message-actions">
                 <button class="copy-button" type="button" data-message="{{ messages | map(attribute='message') | join('\n') }}" onclick="copyMessage(this)">复制全部</button>
@@ -272,7 +311,9 @@
               <table>
                 <thead>
                   <tr>
-                    <th>接收时间</th>
+                    <th>首次接收时间</th>
+                    <th>距首次接收</th>
+                    <th>最后接收时间</th>
                     <th>标识</th>
                     <th>消息</th>
                     <th>操作</th>
@@ -280,7 +321,9 @@
                 </thead>
                 <tbody>
                   {% for item in messages %}
-                    <tr>
+                    <tr class="received-message-row" data-first-received-days="{{ item.first_received_at | days_since }}">
+                      <td>{{ item.first_received_at | cst_time }}</td>
+                      <td>{{ item.first_received_at | days_since }} 天</td>
                       <td>{{ item.received_at | cst_time }}</td>
                       <td>{{ item.key }}</td>
                       <td class="message-content">{{ item.message }}</td>
@@ -295,6 +338,7 @@
                   {% endfor %}
                 </tbody>
               </table>
+              <div class="meta received-message-empty" hidden>没有符合筛选条件的消息。</div>
             </div>
           {% endfor %}
         </div>
@@ -440,6 +484,54 @@
     </section>
   </main>
   <script>
+    function setupReceivedMessageFilter() {
+      const enabled = document.getElementById("received-message-filter-enabled");
+      const daysInput = document.getElementById("received-message-filter-days");
+      if (!enabled || !daysInput) return;
+
+      const controls = Array.from(document.querySelectorAll(".message-tab-control"));
+      const tabs = Array.from(document.querySelectorAll(".message-tab"));
+      const panels = Array.from(document.querySelectorAll(".message-panel"));
+
+      function applyReceivedMessageFilter() {
+        const inputValue = Number(daysInput.value);
+        const threshold = Number.isFinite(inputValue) && inputValue >= 0 ? inputValue : 3;
+
+        panels.forEach((panel, index) => {
+          const rows = Array.from(panel.querySelectorAll(".received-message-row"));
+          let visibleCount = 0;
+          rows.forEach((row) => {
+            const ageInDays = Number(row.dataset.firstReceivedDays);
+            const visible = !enabled.checked || ageInDays > threshold;
+            row.hidden = !visible;
+            if (visible) visibleCount += 1;
+          });
+
+          const table = panel.querySelector("table");
+          const emptyState = panel.querySelector(".received-message-empty");
+          const hasVisibleMessages = visibleCount > 0;
+          if (table) table.hidden = !hasVisibleMessages;
+          if (emptyState) emptyState.hidden = hasVisibleMessages;
+          if (tabs[index]) {
+            tabs[index].hidden = enabled.checked && !hasVisibleMessages;
+            const count = tabs[index].querySelector(".message-tab-count");
+            if (count) count.textContent = enabled.checked ? String(visibleCount) : String(rows.length);
+          }
+          if (controls[index]) controls[index].hidden = enabled.checked && !hasVisibleMessages;
+        });
+
+        const selectedControl = controls.find((control) => control.checked && !control.hidden);
+        if (!selectedControl) {
+          const firstVisibleControl = controls.find((control) => !control.hidden);
+          if (firstVisibleControl) firstVisibleControl.checked = true;
+        }
+      }
+
+      enabled.addEventListener("change", applyReceivedMessageFilter);
+      daysInput.addEventListener("input", applyReceivedMessageFilter);
+      applyReceivedMessageFilter();
+    }
+
     async function copyMessage(button) {
       const originalText = button.textContent;
       try {
@@ -463,6 +555,8 @@
       }
       setTimeout(() => { button.textContent = originalText; }, 1500);
     }
+
+    setupReceivedMessageFilter();
   </script>
 </body>
 </html>
