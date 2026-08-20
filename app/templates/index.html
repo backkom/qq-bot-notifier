@@ -3,16 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>QQ Bot Notifier</title>
+  <title>Game Dev Services</title>
   <style>
     :root {
       color-scheme: light;
-      --bg: #f6f8fb;
+      --bg: #f3f7f7;
       --panel: #ffffff;
-      --text: #18202f;
-      --muted: #647084;
-      --line: #d9e1ee;
-      --accent: #176f6b;
+      --text: #172b2a;
+      --muted: #647775;
+      --line: #d7e4e2;
+      --accent: #0b746d;
+      --accent-dark: #075a55;
+      --accent-soft: #e5f3f1;
       --danger: #b42318;
     }
 
@@ -30,9 +32,10 @@
     }
 
     header {
-      border-bottom: 1px solid var(--line);
-      background: var(--panel);
-      padding: 18px 24px;
+      border-bottom: 1px solid #0a514d;
+      background: #0f4f4b;
+      color: #fff;
+      padding: 22px 24px;
     }
 
     h1 {
@@ -42,22 +45,162 @@
     }
 
     main {
-      width: min(1180px, calc(100vw - 32px));
+      width: min(1240px, calc(100vw - 32px));
       margin: 24px auto 40px;
-      display: grid;
-      gap: 18px;
     }
 
-    section {
-      background: var(--panel);
+    .page-tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 14px;
+      overflow-x: auto;
+    }
+
+    .page-tab {
+      flex: 0 0 auto;
+      min-height: 44px;
+      border: 0;
+      border-bottom: 3px solid transparent;
+      border-radius: 0;
+      padding: 8px 18px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .page-tab:hover {
+      color: var(--accent-dark);
+      background: var(--accent-soft);
+    }
+
+    .page-tab.is-active {
+      border-bottom-color: var(--accent);
+      color: var(--accent-dark);
+    }
+
+    .page-tab:focus-visible,
+    .message-tab-control:focus-visible + .message-tab,
+    button:focus-visible,
+    input:focus-visible {
+      outline: 3px solid rgba(11, 116, 109, 0.24);
+      outline-offset: 2px;
+    }
+
+    .tab-panel {
       border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 18px;
+      background: var(--panel);
+      padding: 22px;
+      box-shadow: 0 8px 24px rgba(20, 56, 54, 0.05);
+    }
+
+    .tab-panel[hidden] {
+      display: none;
+    }
+
+    .panel-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .panel-heading h2 {
+      margin-bottom: 0;
+    }
+
+    .config-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #f8fbfb;
+    }
+
+    .config-status h3 {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: #2e9b68;
+    }
+
+    .status-dot.is-error {
+      background: var(--danger);
+    }
+
+    .config-tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--line);
+      margin-top: 18px;
+      overflow-x: auto;
+    }
+
+    .config-tab {
+      flex: 0 0 auto;
+      min-height: 40px;
+      border: 0;
+      border-bottom: 3px solid transparent;
+      border-radius: 0;
+      padding: 7px 16px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .config-tab:hover {
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+    }
+
+    .config-tab.is-active {
+      border-bottom-color: var(--accent);
+      color: var(--accent-dark);
+    }
+
+    .config-panel[hidden] {
+      display: none;
+    }
+
+    .config-block {
+      min-width: 0;
+      padding: 20px 0 2px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .section-heading h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
     }
 
     h2 {
       margin: 0 0 12px;
-      font-size: 16px;
+      font-size: 19px;
+      letter-spacing: 0;
     }
 
     table {
@@ -74,6 +217,10 @@
       vertical-align: middle;
     }
 
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
     th {
       color: var(--muted);
       font-weight: 600;
@@ -81,7 +228,7 @@
 
     .config-form {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
       gap: 10px;
       align-items: end;
     }
@@ -101,6 +248,7 @@
       padding: 7px 9px;
       color: var(--text);
       font: inherit;
+      background: #fff;
     }
 
     button {
@@ -109,9 +257,14 @@
       border-radius: 6px;
       background: var(--accent);
       color: #fff;
+      padding: 0 14px;
       font: inherit;
       font-weight: 650;
       cursor: pointer;
+    }
+
+    button:hover {
+      background: var(--accent-dark);
     }
 
     .danger-button {
@@ -132,6 +285,10 @@
     .meta {
       color: var(--muted);
       margin-top: 6px;
+    }
+
+    header .meta {
+      color: #c8dfdc;
     }
 
     .errors {
@@ -240,6 +397,10 @@
       flex-wrap: wrap;
       gap: 8px;
       margin-bottom: 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #f8fbfb;
       color: var(--muted);
     }
 
@@ -265,21 +426,47 @@
     }
 
     @media (max-width: 760px) {
+      header {
+        padding: 18px 16px;
+      }
+
+      main {
+        width: min(100% - 20px, 1240px);
+        margin-top: 16px;
+      }
+
+      .tab-panel {
+        padding: 16px;
+      }
+
       .config-form {
         grid-template-columns: 1fr;
+      }
+
+      .message-actions {
+        align-items: stretch;
+        flex-wrap: wrap;
       }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>QQ Bot Notifier</h1>
+    <h1>Game Dev Services</h1>
     <div class="meta">配置文件：{{ config_path }}</div>
   </header>
 
   <main>
-    <section>
-      <h2>接收消息</h2>
+    <div class="page-tabs" role="tablist" aria-label="页面功能">
+      <button class="page-tab is-active" id="tab-button-received" type="button" role="tab" aria-selected="true" aria-controls="tab-received" data-tab-target="tab-received">接收消息</button>
+      <button class="page-tab" id="tab-button-config" type="button" role="tab" aria-selected="false" aria-controls="tab-config" data-tab-target="tab-config">配置</button>
+      <button class="page-tab" id="tab-button-logs" type="button" role="tab" aria-selected="false" aria-controls="tab-logs" data-tab-target="tab-logs">推送记录</button>
+    </div>
+
+    <section id="tab-received" class="tab-panel page-panel" role="tabpanel" aria-labelledby="tab-button-received">
+      <div class="panel-heading">
+        <h2>接收消息</h2>
+      </div>
       {% if received_messages_by_project_key %}
         <div class="message-filter">
           <label for="received-message-filter-enabled">
@@ -347,21 +534,42 @@
       {% endif %}
     </section>
 
-    <section>
-      <h2>配置状态</h2>
-      {% if validation.ok %}
-        <div class="meta">当前配置校验通过。</div>
-      {% else %}
-        <ul class="errors">
-          {% for error in validation.errors %}
-            <li>{{ error }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    </section>
+    <section id="tab-config" class="tab-panel page-panel" role="tabpanel" aria-labelledby="tab-button-config" hidden>
+      <div class="panel-heading">
+        <h2>配置</h2>
+      </div>
 
-    <section>
-      <h2>用户</h2>
+      <div class="config-status">
+      {% if validation.ok %}
+        <span class="status-dot" aria-hidden="true"></span>
+        <div>
+          <h3>配置状态</h3>
+          <div class="meta">当前配置校验通过。</div>
+        </div>
+      {% else %}
+        <span class="status-dot is-error" aria-hidden="true"></span>
+        <div>
+          <h3>配置状态</h3>
+          <ul class="errors">
+            {% for error in validation.errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+      </div>
+
+      <div class="config-tabs" role="tablist" aria-label="配置分类">
+        <button class="config-tab is-active" id="config-tab-button-users" type="button" role="tab" aria-selected="true" aria-controls="config-panel-users" data-config-target="config-panel-users">用户</button>
+        <button class="config-tab" id="config-tab-button-groups" type="button" role="tab" aria-selected="false" aria-controls="config-panel-groups" data-config-target="config-panel-groups">通知组</button>
+        <button class="config-tab" id="config-tab-button-projects" type="button" role="tab" aria-selected="false" aria-controls="config-panel-projects" data-config-target="config-panel-projects">项目</button>
+      </div>
+
+      <div id="config-panel-users" class="config-panel" role="tabpanel" aria-labelledby="config-tab-button-users">
+      <section class="config-block">
+        <div class="section-heading">
+          <h3>用户</h3>
+        </div>
       <table>
         <thead>
           <tr>
@@ -391,9 +599,13 @@
         <button type="submit">保存用户</button>
       </form>
     </section>
+      </div>
 
-    <section>
-      <h2>通知组</h2>
+      <div id="config-panel-groups" class="config-panel" role="tabpanel" aria-labelledby="config-tab-button-groups" hidden>
+      <section class="config-block">
+      <div class="section-heading">
+        <h3>通知组</h3>
+      </div>
       <table>
         <thead>
           <tr>
@@ -416,9 +628,13 @@
         <button type="submit">保存组</button>
       </form>
     </section>
+      </div>
 
-    <section>
-      <h2>项目</h2>
+      <div id="config-panel-projects" class="config-panel" role="tabpanel" aria-labelledby="config-tab-button-projects" hidden>
+      <section class="config-block">
+      <div class="section-heading">
+        <h3>项目</h3>
+      </div>
       <table>
         <thead>
           <tr>
@@ -441,9 +657,14 @@
         <button type="submit">保存项目</button>
       </form>
     </section>
+      </div>
+    </section>
 
-    <section>
-      <h2>最近 24 小时发送记录</h2>
+    <section id="tab-logs" class="tab-panel page-panel" role="tabpanel" aria-labelledby="tab-button-logs" hidden>
+      <div class="panel-heading">
+        <h2>推送记录</h2>
+        <div class="meta">最近 24 小时</div>
+      </div>
       {% if delivery_logs %}
         <table>
           <thead>
@@ -484,6 +705,48 @@
     </section>
   </main>
   <script>
+    function setupTabGroup(tabSelector, panelSelector, targetKey) {
+      const tabs = Array.from(document.querySelectorAll(tabSelector));
+      const panels = Array.from(document.querySelectorAll(panelSelector));
+      if (!tabs.length || !panels.length) return;
+
+      function activateTab(tab, focus = false) {
+        const targetId = tab.dataset[targetKey];
+        tabs.forEach((item) => {
+          const active = item === tab;
+          item.classList.toggle("is-active", active);
+          item.setAttribute("aria-selected", String(active));
+          item.tabIndex = active ? 0 : -1;
+        });
+        panels.forEach((panel) => {
+          panel.hidden = panel.id !== targetId;
+        });
+        if (focus) tab.focus();
+      }
+
+      tabs.forEach((tab, index) => {
+        tab.addEventListener("click", () => activateTab(tab));
+        tab.addEventListener("keydown", (event) => {
+          if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+          event.preventDefault();
+          const nextIndex = event.key === "ArrowRight"
+            ? (index + 1) % tabs.length
+            : (index - 1 + tabs.length) % tabs.length;
+          activateTab(tabs[nextIndex], true);
+        });
+      });
+
+      activateTab(tabs.find((tab) => tab.getAttribute("aria-selected") === "true") || tabs[0]);
+    }
+
+    function setupPageTabs() {
+      setupTabGroup(".page-tab", ".page-panel", "tabTarget");
+    }
+
+    function setupConfigTabs() {
+      setupTabGroup(".config-tab", ".config-panel", "configTarget");
+    }
+
     function setupReceivedMessageFilter() {
       const enabled = document.getElementById("received-message-filter-enabled");
       const daysInput = document.getElementById("received-message-filter-days");
@@ -556,6 +819,8 @@
       setTimeout(() => { button.textContent = originalText; }, 1500);
     }
 
+    setupPageTabs();
+    setupConfigTabs();
     setupReceivedMessageFilter();
   </script>
 </body>
