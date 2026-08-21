@@ -471,9 +471,9 @@
         <div class="message-filter">
           <label for="received-message-filter-enabled">
             <input id="received-message-filter-enabled" type="checkbox">
-            只显示距首次接收超过
+            只显示持续接收天数超过
           </label>
-          <input id="received-message-filter-days" type="number" min="0" step="1" value="3" aria-label="首次接收天数阈值">
+          <input id="received-message-filter-days" type="number" min="0" step="1" value="3" aria-label="持续接收天数阈值">
           <span>天的消息</span>
         </div>
         <div class="message-tabs">
@@ -499,7 +499,7 @@
                 <thead>
                   <tr>
                     <th>首次接收时间</th>
-                    <th>距首次接收</th>
+                    <th>持续天数</th>
                     <th>最后接收时间</th>
                     <th>标识</th>
                     <th>消息</th>
@@ -508,9 +508,9 @@
                 </thead>
                 <tbody>
                   {% for item in messages %}
-                    <tr class="received-message-row" data-first-received-days="{{ item.first_received_at | days_since }}">
+                    <tr class="received-message-row" data-received-duration-days="{{ item.first_received_at | duration_days(item.received_at) }}">
                       <td>{{ item.first_received_at | cst_time }}</td>
-                      <td>{{ item.first_received_at | days_since }} 天</td>
+                      <td>{{ item.first_received_at | duration_days(item.received_at) }} 天</td>
                       <td>{{ item.received_at | cst_time }}</td>
                       <td>{{ item.key }}</td>
                       <td class="message-content">{{ item.message }}</td>
@@ -764,8 +764,8 @@
           const rows = Array.from(panel.querySelectorAll(".received-message-row"));
           let visibleCount = 0;
           rows.forEach((row) => {
-            const ageInDays = Number(row.dataset.firstReceivedDays);
-            const visible = !enabled.checked || ageInDays > threshold;
+            const durationInDays = Number(row.dataset.receivedDurationDays);
+            const visible = !enabled.checked || durationInDays > threshold;
             row.hidden = !visible;
             if (visible) visibleCount += 1;
           });

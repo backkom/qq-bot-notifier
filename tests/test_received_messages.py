@@ -3,7 +3,7 @@ from datetime import UTC, datetime, timedelta
 from fastapi.testclient import TestClient
 
 from app import received_message_store
-from app.main import app, days_since, format_cst
+from app.main import app, duration_days, format_cst
 
 
 def test_format_cst_converts_utc_to_china_standard_time() -> None:
@@ -26,10 +26,18 @@ def test_receive_message_deduplicates_and_refreshes_time(tmp_path, monkeypatch) 
     assert [item.message for item in grouped[("api", "build-42")]] == ["failed"]
 
 
-def test_days_since_returns_complete_elapsed_days() -> None:
-    timestamp = datetime.now(UTC) - timedelta(days=3, hours=2)
+def test_duration_days_uses_first_and_last_received_timestamps() -> None:
+    first_received_at = datetime(2026, 7, 20, 4, 5, 6, tzinfo=UTC)
+    last_received_at = first_received_at + timedelta(days=3, hours=2)
 
-    assert days_since(timestamp) == 3
+    assert duration_days(first_received_at, last_received_at) == 3
+
+
+def test_duration_days_does_not_use_current_time() -> None:
+    first_received_at = datetime(2026, 7, 20, 4, 5, 6, tzinfo=UTC)
+    last_received_at = first_received_at + timedelta(hours=23)
+
+    assert duration_days(first_received_at, last_received_at) == 0
 
 
 def test_legacy_messages_use_last_received_time_as_first_received_time(tmp_path, monkeypatch) -> None:
@@ -90,6 +98,28 @@ def test_received_message_api_and_delete_form(tmp_path, monkeypatch) -> None:
     )
     assert delete_response.status_code == 303
     assert received_message_store.list_messages_by_project_key() == {}
+
+
+def test_received_message_page_displays_duration_days(tmp_path, monkeypatch) -> None:
+    message_path = tmp_path / "received-messages.json"
+    monkeypatch.setattr(received_message_store, "RECEIVED_MESSAGES_PATH", message_path)
+    first_received_at = datetime(2026, 7, 20, 4, 5, 6, tzinfo=UTC)
+    last_received_at = first_received_at + timedelta(days=3, hours=2)
+    message_path.write_text(
+        "[{"
+        '"id":"message-1","project":"api","key":"build-42",'
+        '"message":"failed",'
+        f'"first_received_at":"{first_received_at.isoformat()}",'
+        f'"received_at":"{last_received_at.isoformat()}"'
+        "}]",
+        encoding="utf-8",
+    )
+
+    response = TestClient(app).get("/")
+
+    assert response.status_code == 200
+    assert 'data-received-duration-days="3"' in response.text
+    assert "<td>3 天</td>" in response.text
 
 
 def test_delete_message_group_form(tmp_path, monkeypatch) -> None:
