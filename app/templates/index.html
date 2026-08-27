@@ -377,6 +377,16 @@
       white-space: pre-wrap;
     }
 
+    .payload-content {
+      max-width: 600px;
+      max-height: 240px;
+      margin: 0;
+      overflow: auto;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+      font: inherit;
+    }
+
     .copy-button {
       background: #475467;
       min-width: 64px;
@@ -503,6 +513,7 @@
                     <th>最后接收时间</th>
                     <th>标识</th>
                     <th>消息</th>
+                    <th>Payload</th>
                     <th>操作</th>
                   </tr>
                 </thead>
@@ -514,6 +525,7 @@
                       <td>{{ item.received_at | cst_time }}</td>
                       <td>{{ item.key }}</td>
                       <td class="message-content">{{ item.message }}</td>
+                      <td><pre class="payload-content">{{ item.payload | payload_json }}</pre></td>
                       <td class="action-cell">
                         <button class="copy-button" type="button" data-message="{{ item.message }}" onclick="copyMessage(this)">复制</button>
                         <form class="inline-form" action="/cache-messages/delete" method="post">

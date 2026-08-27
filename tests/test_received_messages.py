@@ -16,14 +16,19 @@ def test_receive_message_deduplicates_and_refreshes_time(tmp_path, monkeypatch) 
     message_path = tmp_path / "received-messages.json"
     monkeypatch.setattr(received_message_store, "RECEIVED_MESSAGES_PATH", message_path)
 
-    first = received_message_store.receive_message("api", "build-42", "failed")
-    second = received_message_store.receive_message("api", "build-42", "failed")
+    first = received_message_store.receive_message(
+        "api", "build-42", "failed", {"attempt": 1}
+    )
+    second = received_message_store.receive_message(
+        "api", "build-42", "failed", {"attempt": 2}
+    )
 
     assert first.id == second.id
     assert second.first_received_at == first.first_received_at
     assert second.received_at >= first.received_at
     grouped = received_message_store.list_messages_by_project_key()
     assert [item.message for item in grouped[("api", "build-42")]] == ["failed"]
+    assert grouped[("api", "build-42")][0].payload == {"attempt": 2}
 
 
 def test_duration_days_uses_first_and_last_received_timestamps() -> None:
@@ -86,10 +91,16 @@ def test_received_message_api_and_delete_form(tmp_path, monkeypatch) -> None:
 
     response = client.post(
         "/cache-messages",
-        json={"project": "api", "key": "build-42", "message": "failed"},
+        json={
+            "project": "api",
+            "key": "build-42",
+            "message": "failed",
+            "payload": {"job": "build-42"},
+        },
     )
 
     assert response.status_code == 200
+    assert response.json()["message"]["payload"] == {"job": "build-42"}
     message_id = response.json()["message"]["id"]
     delete_response = client.post(
         "/cache-messages/delete",
@@ -109,6 +120,7 @@ def test_received_message_page_displays_duration_days(tmp_path, monkeypatch) -> 
         "[{"
         '"id":"message-1","project":"api","key":"build-42",'
         '"message":"failed",'
+        '"payload":{"job":"payload-build"},'
         f'"first_received_at":"{first_received_at.isoformat()}",'
         f'"received_at":"{last_received_at.isoformat()}"'
         "}]",
@@ -119,6 +131,8 @@ def test_received_message_page_displays_duration_days(tmp_path, monkeypatch) -> 
 
     assert response.status_code == 200
     assert 'data-received-duration-days="3"' in response.text
+    assert "payload-content" in response.text
+    assert "payload-build" in response.text
     assert "<td>3 天</td>" in response.text
 
 

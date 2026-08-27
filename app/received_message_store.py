@@ -5,6 +5,7 @@ import os
 from datetime import UTC, datetime
 from pathlib import Path
 from threading import RLock
+from typing import Any
 from uuid import uuid4
 
 from .env_loader import load_project_env
@@ -17,14 +18,20 @@ RECEIVED_MESSAGES_PATH = Path(os.getenv("QQ_RECEIVED_MESSAGES", "logs/received-m
 _LOCK = RLock()
 
 
-def receive_message(project: str, key: str, message: str) -> ReceivedMessage:
-    """Insert a message or refresh the last-received timestamp of an identical message."""
+def receive_message(
+    project: str,
+    key: str,
+    message: str,
+    payload: Any = None,
+) -> ReceivedMessage:
+    """Insert a message or refresh an identical message with its latest payload."""
     now = datetime.now(UTC)
     with _LOCK:
         messages = _load_messages()
         for item in messages:
             if item.project == project and item.key == key and item.message == message:
                 item.received_at = now
+                item.payload = payload
                 _save_messages(messages)
                 return item
 
@@ -33,6 +40,7 @@ def receive_message(project: str, key: str, message: str) -> ReceivedMessage:
             project=project,
             key=key,
             message=message,
+            payload=payload,
             first_received_at=now,
             received_at=now,
         )

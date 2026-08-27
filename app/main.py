@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import json
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import FastAPI, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -61,8 +62,15 @@ def duration_days(start: datetime, end: datetime) -> int:
     return max(0, delta.days)
 
 
+def format_payload(value: Any) -> str:
+    if isinstance(value, str):
+        return value
+    return json.dumps(value, ensure_ascii=False, indent=2)
+
+
 templates.env.filters["cst_time"] = format_cst
 templates.env.filters["duration_days"] = duration_days
+templates.env.filters["payload_json"] = format_payload
 
 
 @app.get("/healthz")
@@ -124,7 +132,7 @@ async def private_message(request: PrivateMessageRequest) -> PrivateMessageRespo
 
 @app.post("/cache-messages", response_model=ReceivedMessageResponse)
 def post_received_message(request: ReceivedMessageRequest) -> ReceivedMessageResponse:
-    message = receive_message(request.project, request.key, request.message)
+    message = receive_message(request.project, request.key, request.message, request.payload)
     logger.info("received_message project=%s key=%s", request.project, request.key)
     return ReceivedMessageResponse(ok=True, message=message)
 

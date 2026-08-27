@@ -71,6 +71,7 @@ class ReceivedMessageRequest(BaseModel):
     project: str = Field(min_length=1)
     key: str = Field(min_length=1)
     message: str = Field(min_length=1)
+    payload: Any = None
 
 
 class ReceivedMessage(BaseModel):
@@ -78,6 +79,7 @@ class ReceivedMessage(BaseModel):
     project: str
     key: str
     message: str
+    payload: Any = None
     first_received_at: datetime
     received_at: datetime
 
