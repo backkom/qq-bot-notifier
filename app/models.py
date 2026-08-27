@@ -79,7 +79,7 @@ class ReceivedMessage(BaseModel):
     project: str
     key: str
     message: str
-    payload: Any = None
+    payload: list[Any] = Field(default_factory=list)
     first_received_at: datetime
     received_at: datetime
 

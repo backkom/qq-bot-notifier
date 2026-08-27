@@ -16,6 +16,7 @@ load_project_env()
 
 RECEIVED_MESSAGES_PATH = Path(os.getenv("QQ_RECEIVED_MESSAGES", "logs/received-messages.json"))
 _LOCK = RLock()
+_MAX_PAYLOADS = 10
 
 
 def receive_message(
@@ -24,14 +25,14 @@ def receive_message(
     message: str,
     payload: Any = None,
 ) -> ReceivedMessage:
-    """Insert a message or refresh an identical message with its latest payload."""
+    """Insert a message or refresh an identical message with its payload history."""
     now = datetime.now(UTC)
     with _LOCK:
         messages = _load_messages()
         for item in messages:
             if item.project == project and item.key == key and item.message == message:
                 item.received_at = now
-                item.payload = payload
+                item.payload = _append_payload(item.payload, payload)
                 _save_messages(messages)
                 return item
 
@@ -40,7 +41,7 @@ def receive_message(
             project=project,
             key=key,
             message=message,
-            payload=payload,
+            payload=_append_payload([], payload),
             first_received_at=now,
             received_at=now,
         )
@@ -98,8 +99,44 @@ def _load_messages() -> list[ReceivedMessage]:
     for item in raw:
         if not item.get("first_received_at"):
             item = {**item, "first_received_at": item["received_at"]}
+        item = {**item, "payload": _normalise_payloads(item.get("payload"))}
         messages.append(ReceivedMessage.model_validate(item))
     return messages
+
+
+def _append_payload(payloads: list[Any], payload: Any) -> list[Any]:
+    if not _is_non_empty_payload(payload):
+        return payloads
+
+    payload_key = _payload_key(payload)
+    remaining = [item for item in payloads if _payload_key(item) != payload_key]
+    remaining.append(payload)
+    return remaining[-_MAX_PAYLOADS:]
+
+
+def _normalise_payloads(value: Any) -> list[Any]:
+    if value is None:
+        return []
+
+    values = value if isinstance(value, list) else [value]
+    payloads: list[Any] = []
+    for payload in values:
+        payloads = _append_payload(payloads, payload)
+    return payloads
+
+
+def _is_non_empty_payload(payload: Any) -> bool:
+    if payload is None:
+        return False
+    if isinstance(payload, str):
+        return bool(payload.strip())
+    if isinstance(payload, (dict, list)):
+        return bool(payload)
+    return True
+
+
+def _payload_key(payload: Any) -> str:
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
 def _save_messages(messages: list[ReceivedMessage]) -> None:

@@ -377,14 +377,48 @@
       white-space: pre-wrap;
     }
 
+    .payload-hover {
+      position: relative;
+      max-width: 600px;
+      cursor: help;
+    }
+
+    .payload-preview {
+      max-height: 5.5em;
+      overflow: hidden;
+    }
+
+    .payload-tooltip {
+      display: none;
+      position: absolute;
+      z-index: 10;
+      top: calc(100% + 6px);
+      left: 0;
+      width: min(600px, 70vw);
+      max-height: 360px;
+      overflow: auto;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      box-shadow: 0 8px 24px rgba(16, 24, 40, 0.18);
+    }
+
+    .payload-hover:hover .payload-tooltip,
+    .payload-hover:focus-within .payload-tooltip {
+      display: block;
+    }
+
     .payload-content {
       max-width: 600px;
-      max-height: 240px;
       margin: 0;
-      overflow: auto;
       overflow-wrap: anywhere;
       white-space: pre-wrap;
       font: inherit;
+    }
+
+    .payload-tooltip .payload-content + .payload-content {
+      margin-top: 8px;
     }
 
     .copy-button {
@@ -525,7 +559,28 @@
                       <td>{{ item.received_at | cst_time }}</td>
                       <td>{{ item.key }}</td>
                       <td class="message-content">{{ item.message }}</td>
-                      <td><pre class="payload-content">{{ item.payload | payload_json }}</pre></td>
+                      <td>
+                        {% if item.payload %}
+                          <div
+                            class="payload-hover"
+                            tabindex="0"
+                            aria-describedby="payload-history-{{ item.id }}"
+                          >
+                            <pre class="payload-content payload-preview">{{ item.payload[-1] | payload_json }}</pre>
+                            <div
+                              class="payload-tooltip"
+                              id="payload-history-{{ item.id }}"
+                              role="tooltip"
+                            >
+                              {% for payload in item.payload %}
+                                <pre class="payload-content">{{ payload | payload_json }}</pre>
+                              {% endfor %}
+                            </div>
+                          </div>
+                        {% else %}
+                          <span class="meta">-</span>
+                        {% endif %}
+                      </td>
                       <td class="action-cell">
                         <button class="copy-button" type="button" data-message="{{ item.message }}" onclick="copyMessage(this)">复制</button>
                         <form class="inline-form" action="/cache-messages/delete" method="post">

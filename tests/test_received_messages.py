@@ -12,7 +12,7 @@ def test_format_cst_converts_utc_to_china_standard_time() -> None:
     assert format_cst(timestamp) == "2026-07-23 12:05:06 CST"
 
 
-def test_receive_message_deduplicates_and_refreshes_time(tmp_path, monkeypatch) -> None:
+def test_receive_message_deduplicates_and_stores_latest_payloads(tmp_path, monkeypatch) -> None:
     message_path = tmp_path / "received-messages.json"
     monkeypatch.setattr(received_message_store, "RECEIVED_MESSAGES_PATH", message_path)
 
@@ -28,7 +28,38 @@ def test_receive_message_deduplicates_and_refreshes_time(tmp_path, monkeypatch) 
     assert second.received_at >= first.received_at
     grouped = received_message_store.list_messages_by_project_key()
     assert [item.message for item in grouped[("api", "build-42")]] == ["failed"]
-    assert grouped[("api", "build-42")][0].payload == {"attempt": 2}
+    assert grouped[("api", "build-42")][0].payload == [
+        {"attempt": 1},
+        {"attempt": 2},
+    ]
+
+
+def test_receive_message_keeps_ten_non_empty_unique_payloads(tmp_path, monkeypatch) -> None:
+    message_path = tmp_path / "received-messages.json"
+    monkeypatch.setattr(received_message_store, "RECEIVED_MESSAGES_PATH", message_path)
+
+    for index in range(12):
+        received_message_store.receive_message(
+            "api", "build-42", "failed", {"index": index}
+        )
+    received_message_store.receive_message("api", "build-42", "failed", {})
+    received_message_store.receive_message("api", "build-42", "failed", "")
+    received_message_store.receive_message("api", "build-42", "failed", None)
+    received_message_store.receive_message("api", "build-42", "failed", {"index": 5})
+
+    item = received_message_store.list_messages_by_project_key()[("api", "build-42")][0]
+    assert item.payload == [
+        {"index": 2},
+        {"index": 3},
+        {"index": 4},
+        {"index": 6},
+        {"index": 7},
+        {"index": 8},
+        {"index": 9},
+        {"index": 10},
+        {"index": 11},
+        {"index": 5},
+    ]
 
 
 def test_duration_days_uses_first_and_last_received_timestamps() -> None:
@@ -100,7 +131,7 @@ def test_received_message_api_and_delete_form(tmp_path, monkeypatch) -> None:
     )
 
     assert response.status_code == 200
-    assert response.json()["message"]["payload"] == {"job": "build-42"}
+    assert response.json()["message"]["payload"] == [{"job": "build-42"}]
     message_id = response.json()["message"]["id"]
     delete_response = client.post(
         "/cache-messages/delete",
@@ -134,6 +165,32 @@ def test_received_message_page_displays_duration_days(tmp_path, monkeypatch) -> 
     assert "payload-content" in response.text
     assert "payload-build" in response.text
     assert "<td>3 天</td>" in response.text
+
+
+def test_received_message_page_previews_latest_payload_and_hides_history(
+    tmp_path, monkeypatch
+) -> None:
+    message_path = tmp_path / "received-messages.json"
+    monkeypatch.setattr(received_message_store, "RECEIVED_MESSAGES_PATH", message_path)
+    received_at = datetime(2026, 7, 23, 4, 5, 6, tzinfo=UTC)
+    message_path.write_text(
+        "[{"
+        '"id":"message-1","project":"api","key":"build-42",'
+        '"message":"failed",'
+        '"payload":[{"job":"payload-old"},{"job":"payload-new"}],'
+        f'"first_received_at":"{received_at.isoformat()}",'
+        f'"received_at":"{received_at.isoformat()}"'
+        "}]",
+        encoding="utf-8",
+    )
+
+    response = TestClient(app).get("/")
+
+    assert response.status_code == 200
+    assert response.text.count('class="payload-content payload-preview"') == 1
+    assert response.text.count("payload-new") == 2
+    assert response.text.count("payload-old") == 1
+    assert 'class="payload-tooltip"' in response.text
 
 
 def test_delete_message_group_form(tmp_path, monkeypatch) -> None:
