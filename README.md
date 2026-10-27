@@ -36,12 +36,83 @@ export QQ_DELIVERY_LOG="logs/qqbot-payloads.jsonl"
 
 ## 接口
 
-- `POST /notify`：接收 Jenkins 通知并转发。
+- `POST /notify`：接收 Jenkins 通知并转发到项目群。
 - `POST /private-message`：向指定 QQ 号发送私聊文本消息。
 - `GET /`：网页管理用户、通知组、项目群号。
 - `GET /config`：查看当前配置，token 会被隐藏。
 - `GET /config/validate`：校验配置。
 - `GET /healthz`：健康检查。
+
+机器人 token 默认读取 `config/config.json` 的 `qq_bot.token`；若进程环境存在 `QQ_BOT_TOKEN`，加载时会覆盖该值（适合共享机器等不想把密钥落盘的场景）。
+
+### POST /notify
+
+将 `text` 中的 `@目标` 解析为机器人消息段后，发送到 `projects.<project>.group_id` 对应的 QQ 群。`@目标` 先按 `users` 里的用户名匹配（换成该用户 QQ 的 @），再按 `mention_groups` 的组名匹配（展开 @ 组内全部成员，重复 QQ 自动去重）；无法识别的 `@xxx` 会以原文保留并继续发送，同时出现在响应的 `unknown_mentions` 里。
+
+```bash
+curl -X POST "http://192.168.50.5:7848/notify" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project": "family",
+    "title": "构建失败",
+    "text": "@leaf test。"
+  }'
+```
+
+| 字段 | 必填 | 说明 |
+| --- | --- | --- |
+| project | 是 | 项目名，必须已在配置的 `projects` 中登记 |
+| text | 是 | 消息正文，支持 `@用户名` / `@通知组名` |
+| title | 否 | 标题，发送时排在正文之前 |
+| extra | 否 | 附加对象，按 `键: 值` 逐行追加到正文之后（空值跳过） |
+
+成功响应示例（`qq_bot_status` 为下游机器人的 HTTP 状态码）：
+
+```json
+{
+  "ok": true,
+  "project": "family",
+  "group_id": 524653233,
+  "mentioned_users": ["leaf"],
+  "mentioned_qqs": ["172310132"],
+  "unknown_mentions": [],
+  "qq_bot_status": 200
+}
+```
+
+失败响应：`project` 未登记返回 `404`；配置校验不通过返回 `500`；下游机器人调用失败（网络错误或非 2xx/4xx 拒绝）返回 `502`，并会额外触发一次失败告警。
+
+### POST /private-message
+
+向指定 QQ 号发送私聊文本。请求发往与 `qq_bot.url` 同主机同端口的 `/send_private_msg`，除 HTTP 状态码外还会校验 NapCat 返回体的 `status == "ok"` 且 `retcode == 0`。
+
+```bash
+curl -X POST "http://192.168.50.5:7848/private-message" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "qq": "172310132",
+    "text": "构建已经完成，请及时查看。"
+  }'
+```
+
+| 字段 | 必填 | 说明 |
+| --- | --- | --- |
+| qq | 是 | 目标 QQ 号，纯数字字符串（不以 0 开头） |
+| text | 是 | 私聊文本内容，不能为空 |
+
+成功响应示例：
+
+```json
+{
+  "ok": true,
+  "qq": "172310132",
+  "qq_bot_status": 200
+}
+```
+
+失败响应：`qq`/`text` 格式不符返回 `422`；机器人发送失败返回 `502`。
+
+实际发出去的 payload（含成功与失败）会追加记录到 `logs/qqbot-payloads.jsonl`（可用 `QQ_DELIVERY_LOG` 覆盖路径），不记录 Authorization token。
 
 Jenkins 示例见 [docs/jenkins.md](docs/jenkins.md)。
 
