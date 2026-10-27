@@ -4,11 +4,11 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.sevenpirates.bot-notifier</string>
+  <string>com.leaf.bot-notifier</string>
 
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/bigkraken/Documents/qq-bot-notifier/env/bin/python</string>
+    <string>/Users/leaf/Documents/qq-bot-notifier/env/bin/python</string>
     <string>-m</string>
     <string>uvicorn</string>
     <string>app.main:app</string>
@@ -19,12 +19,12 @@
   </array>
 
   <key>WorkingDirectory</key>
-  <string>/Users/bigkraken/Documents/qq-bot-notifier</string>
+  <string>/Users/leaf/Documents/qq-bot-notifier</string>
 
   <key>EnvironmentVariables</key>
   <dict>
     <key>PYTHONPATH</key>
-    <string>/Users/bigkraken/Documents/qq-bot-notifier</string>
+    <string>/Users/leaf/Documents/qq-bot-notifier</string>
   </dict>
 
   <key>RunAtLoad</key>
@@ -34,9 +34,9 @@
   <true/>
 
   <key>StandardOutPath</key>
-  <string>/Users/bigkraken/Documents/qq-bot-notifier/logs/launchd.out.log</string>
+  <string>/Users/leaf/Documents/qq-bot-notifier/logs/launchd.out.log</string>
 
   <key>StandardErrorPath</key>
-  <string>/Users/bigkraken/Documents/qq-bot-notifier/logs/launchd.err.log</string>
+  <string>/Users/leaf/Documents/qq-bot-notifier/logs/launchd.err.log</string>
 </dict>
 </plist>

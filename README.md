@@ -410,9 +410,9 @@ bash deploy/macos/install-launchctl.sh
 或者手工安装固定路径版本：
 
 ```bash
-cp deploy/macos/com.sevenpirates.bot-notifier.plist ~/Library/LaunchAgents/
-launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.sevenpirates.bot-notifier.plist
-launchctl kickstart -k "gui/$(id -u)/com.sevenpirates.bot-notifier"
+cp deploy/macos/com.leaf.bot-notifier.plist ~/Library/LaunchAgents/
+launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.leaf.bot-notifier.plist
+launchctl kickstart -k "gui/$(id -u)/com.leaf.bot-notifier"
 ```
 
 重启服务：

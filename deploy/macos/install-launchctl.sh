@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-LABEL="com.sevenpirates.bot-notifier"
+LABEL="com.leaf.bot-notifier"
 TARGET_DIR="${HOME}/Library/LaunchAgents"
 TARGET_PLIST="${TARGET_DIR}/${LABEL}.plist"
 TEMPLATE="${SCRIPT_DIR}/${LABEL}.plist.template"

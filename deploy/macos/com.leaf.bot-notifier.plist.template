@@ -4,7 +4,7 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.sevenpirates.bot-notifier</string>
+  <string>com.leaf.bot-notifier</string>
 
   <key>ProgramArguments</key>
   <array>
