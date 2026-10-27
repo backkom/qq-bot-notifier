@@ -341,6 +341,16 @@ curl -X DELETE "http://127.0.0.1:7848/cache-messages/clear-all?project=monster&k
 - **配置**：管理用户、通知组、项目群号。
 - **推送记录**：查看最近 24 小时实际发送给 OneBot 的消息和结果。
 
+### 界面截图
+
+**配置**：查看配置校验状态，维护用户、通知组、项目群号。
+
+![配置页](docs/screenshots/config.png)
+
+**推送记录**：查看最近 24 小时的发送时间、目标群、消息内容、调用接口和返回结果。
+
+![推送记录页](docs/screenshots/push-records.png)
+
 ## Jenkins 集成
 
 最小示例：
