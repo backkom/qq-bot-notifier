@@ -4,25 +4,25 @@
     "port": 7848
   },
   "qq_bot": {
-    "url": "http://192.168.0.199:3000/send_group_msg",
-    "token": "OVxgQlGiQQNAKSsfi_65JfqFr04auTXKDzW8IsME0m8",
+    "url": "http://127.0.0.1:3000/send_group_msg",
+    "token": "",
     "timeout_seconds": 10.0
   },
   "projects": {
-    "monster": {
-      "group_id": 524653233
+    "project_name": {
+      "group_id": 123456789
     }
   },
   "users": {
-    "leaf": {
-      "qq": "172310132",
-      "display_name": "leaf"
+    "username": {
+      "qq": "10001",
+      "display_name": "display name"
     }
   },
   "mention_groups": {
-    "monster_tester": {
+    "group_name": {
       "members": [
-        "leaf"
+        "username"
       ]
     }
   }

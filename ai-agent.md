@@ -1,5 +1,7 @@
 # qq-bot-notifier AI Agent Handoff
 
+> **内部交接文档**：包含内网地址、部署路径和示例账号，请勿随公开仓库发布；对外说明以 [README.md](README.md) 为准。
+
 ## 背景
 
 本仓库用于实现一个 QQ 群机器人通知转发服务。服务运行在内网：
@@ -7,7 +9,7 @@
 - 本服务地址：`http://192.168.0.193:7848`
 - 上游调用方：Jenkins，通过 `curl` 发送 HTTP JSON 消息
 - 下游机器人接口示例：`http://192.168.0.199:3000/send_group_msg`
-- 下游鉴权示例：`Authorization: Bearer GKQP2ixNKR_ZL5zi`
+- 下游鉴权示例：`Authorization: Bearer <your-token>`（真实 token 请放在 `.env` 的 `QQ_BOT_TOKEN` 中，不要提交）
 
 目标是让 Jenkins 只关心项目、通知目标和文本内容，由本服务负责：
 
@@ -43,7 +45,7 @@
 
 ```bash
 curl -X POST "http://192.168.0.199:3000/send_group_msg" \
-  -H "Authorization: Bearer GKQP2ixNKR_ZL5zi" \
+  -H "Authorization: Bearer <your-token>" \
   -H "Content-Type: application/json" \
   -d '{
     "group_id": 524653233,
@@ -343,7 +345,7 @@ Content-Type: application/json
 }
 ```
 
-NapCat 即使业务失败也可能返回 HTTP 200，因此实现必须同时检查响应 JSON：仅 `status` 为 `ok` 且 `retcode` 为 `0` 时视为成功。调用失败时本接口返回 `502` 并沿用现有 QQ Bot 发送失败通知机制；请求字段校验失败时由 FastAPI 返回 `422`。
+NapCat 即使业务失败也可能返回 HTTP 200，因此实现必须同时检查响应 JSON：仅 `status` 为 `ok` 且 `retcode` 为 `0` 时视为成功。调用失败时本接口返回 `502`；请求字段校验失败时由 FastAPI 返回 `422`。
 
 ### `GET /`
 
@@ -500,9 +502,3 @@ uvicorn app.main:app --host 0.0.0.0 --port 7848 --reload
 - 如果编辑 README，注意当前 README 内容可能是编码乱码，建议直接替换为 UTF-8 中文。
 - 如果实现网页，保持简单实用，优先可维护性和配置正确性。
 - 如果服务只在可信内网运行，可以先不做认证；如果暴露给更广范围，必须补认证。
-
-## QQ Bot 发送失败通知
-
-当下游 QQ Bot 请求失败并抛出 `QQBotSendError` 时，服务会调用 Jenkins 的 `Message Notify` job，向 `192.168.0.194;` 发送“给QQBot发送消息失败”，并在“通知内容：”后附上原始通知的 `title`（如有）和 `text`。Jenkins 请求使用 Basic Auth 和 `application/x-www-form-urlencoded` 参数 `target`、`text`。
-
-失败通知的地址、用户名、凭据、目标、文案和超时时间按用户要求直接定义在 `app/failure_notifier.py` 中。失败通知自身请求失败时只写错误日志，原 `/notify` 请求仍返回 QQ Bot 失败对应的 502。
