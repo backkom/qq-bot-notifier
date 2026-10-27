@@ -36,6 +36,9 @@ def save_config(config: AppConfig) -> None:
         CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
         tmp_path = CONFIG_PATH.with_suffix(CONFIG_PATH.suffix + ".tmp")
         data = config.model_dump(mode="json")
+        if os.getenv("QQ_BOT_TOKEN"):
+            # 环境变量已覆盖文件 token（load_config 中生效），不落盘，避免把 .env 的密钥写回配置文件。
+            data["qq_bot"]["token"] = ""
         tmp_path.write_text(
             json.dumps(data, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
