@@ -1,0 +1,7 @@
+# 部署产物必须保持 LF：
+# 本仓库在 Windows 上以 core.autocrlf=true 检出，若不加约束，*.service / *.sh
+# 会被转成 CRLF，拷贝到 Linux 后 systemd 解析报错、bash 脚本出现 \r 错误。
+
+deploy/** text eol=lf
+*.service text eol=lf
+*.sh      text eol=lf

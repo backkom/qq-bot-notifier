@@ -1,0 +1,41 @@
+# QQ Bot Notifier systemd 单元模板
+# deploy/linux/install-systemd.sh 会替换项目路径、运行用户、监听端口和 python 路径
+# 四个占位符，渲染后安装到 /etc/systemd/system/。手工部署请直接用同目录的
+# qq-bot-notifier.service（已按 /home/leaf/qq-bot-notifier 填好）。
+
+[Unit]
+Description=QQ Bot Notifier (FastAPI + uvicorn)
+Documentation=file://__PROJECT_DIR__/README.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=__RUN_USER__
+Group=__RUN_USER__
+WorkingDirectory=__PROJECT_DIR__
+Environment=PYTHONPATH=__PROJECT_DIR__
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONIOENCODING=utf-8
+# 缺少 .env 时不阻断启动，token 也可由 systemd Environment= 或配置文件提供
+EnvironmentFile=-__PROJECT_DIR__/.env
+# 单进程即可：缓存消息保存在进程内并由 logs/received-messages.json 持久化，不要加 --workers
+ExecStart=__PYTHON_BIN__ -m uvicorn app.main:app --host 0.0.0.0 --port __PORT__
+ExecStartPre=/bin/mkdir -p __PROJECT_DIR__/logs
+Restart=always
+RestartSec=3s
+TimeoutStopSec=15s
+KillSignal=SIGINT
+SyslogIdentifier=qq-bot-notifier
+
+# 只读加固：/usr、/boot、/etc 只读，项目目录仍可写（config/config.json、logs/）
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

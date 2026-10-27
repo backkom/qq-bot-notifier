@@ -1,0 +1,46 @@
+# QQ Bot Notifier systemd 单元（已按 /home/leaf/qq-bot-notifier 填好固定值）
+#
+# 手工安装：
+#   sudo install -m 0644 deploy/linux/qq-bot-notifier.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now qq-bot-notifier
+#
+# 推荐用脚本安装（会自动按实际路径/用户渲染模板）：
+#   sudo bash deploy/linux/install-systemd.sh
+
+[Unit]
+Description=QQ Bot Notifier (FastAPI + uvicorn)
+Documentation=file:///home/leaf/qq-bot-notifier/README.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=leaf
+Group=leaf
+WorkingDirectory=/home/leaf/qq-bot-notifier
+Environment=PYTHONPATH=/home/leaf/qq-bot-notifier
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONIOENCODING=utf-8
+# 缺少 .env 时不阻断启动，token 也可由 systemd Environment= 或配置文件提供
+EnvironmentFile=-/home/leaf/qq-bot-notifier/.env
+# 单进程即可：缓存消息保存在进程内并由 logs/received-messages.json 持久化，不要加 --workers
+ExecStart=/home/leaf/qq-bot-notifier/env/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 7848
+ExecStartPre=/bin/mkdir -p /home/leaf/qq-bot-notifier/logs
+Restart=always
+RestartSec=3s
+TimeoutStopSec=15s
+KillSignal=SIGINT
+SyslogIdentifier=qq-bot-notifier
+
+# 只读加固：/usr、/boot、/etc 只读，项目目录仍可写（config/config.json、logs/）
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target
